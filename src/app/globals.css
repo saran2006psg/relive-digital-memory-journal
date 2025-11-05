@@ -54,7 +54,7 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #f5e6d3;
+  --background: #ffffff;
   --foreground: #2c3e50;
   --paper: #FFFFFF;
   --warm-bg: #faf5ed;
@@ -141,14 +141,23 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Dancing Script', cursive;
-    background-image: 
+    background-color: #ffffff;
+    background-image:
+      linear-gradient(
+        90deg,
+        #ffffff 80px,
+        #ffffff 82px,
+        transparent 82px
+      ),
       repeating-linear-gradient(
         0deg,
-        transparent,
-        transparent 2px,
-        rgba(212, 184, 150, 0.1) 2px,
-        rgba(212, 184, 150, 0.1) 4px
+        transparent 0px,
+        transparent 34px,
+        rgba(99, 179, 237, 0.25) 34px,
+        rgba(99, 179, 237, 0.25) 35px
       );
+    background-size: 100% 100%, 100% 35px;
+    background-repeat: no-repeat, repeat;
   }
   
   h1, h2, h3, h4, h5, h6 {

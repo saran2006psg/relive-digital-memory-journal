@@ -1,10 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Calendar, Clock, Heart, Smile, Meh, Frown, BookOpen, Plus, Sparkles } from "lucide-react"
+import { useEffect, useState } from "react"
+import type { LucideIcon } from "lucide-react"
+import { Calendar, Clock, Heart, BookOpen, Plus, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
 const moods = [
   { emoji: "😊", label: "Happy", color: "#B5D99C", count: 12 },
@@ -39,13 +41,80 @@ const reminders = [
   { id: 3, title: "Graduation Day", date: "In 45 days", color: "#3498db" },
 ]
 
+const dashboardSections: {
+  id: string
+  label: string
+  description: string
+  color: string
+  icon: LucideIcon
+}[] = [
+  {
+    id: "on-this-day",
+    label: "On This Day",
+    description: "Hop back to memories captured on this very date.",
+    color: "#3498db",
+    icon: Calendar,
+  },
+  {
+    id: "mood-journey",
+    label: "Mood Journey",
+    description: "Trace the emotions woven through your month.",
+    color: "#ff9a8b",
+    icon: Heart,
+  },
+  {
+    id: "upcoming-reminders",
+    label: "Upcoming Reminders",
+    description: "Never miss the moments you want to celebrate next.",
+    color: "#8dd3c7",
+    icon: Clock,
+  },
+]
+
+const adjustColor = (hex: string, percent: number) => {
+  const normalized = hex.replace("#", "")
+  if (normalized.length !== 6) return hex
+
+  const num = parseInt(normalized, 16)
+  const amt = Math.round(2.55 * percent)
+  const r = Math.min(255, Math.max(0, (num >> 16) + amt))
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00ff) + amt))
+  const b = Math.min(255, Math.max(0, (num & 0x0000ff) + amt))
+
+  return `#${(0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
+}
+
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false)
   const [currentHour, setCurrentHour] = useState(new Date().getHours())
+  const [activeSection, setActiveSection] = useState<string>(dashboardSections[0].id)
   
   useEffect(() => {
     setMounted(true)
     setCurrentHour(new Date().getHours())
+  }, [])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries
+          .filter((entry) => entry.isIntersecting)
+          .forEach((entry) => {
+            setActiveSection(entry.target.id)
+          })
+      },
+      {
+        rootMargin: "-45% 0px -45% 0px",
+        threshold: 0.25,
+      }
+    )
+
+    dashboardSections.forEach(({ id }) => {
+      const element = document.getElementById(id)
+      if (element) observer.observe(element)
+    })
+
+    return () => observer.disconnect()
   }, [])
 
   const getGreeting = () => {
@@ -56,10 +125,62 @@ export default function DashboardPage() {
 
   const totalMoodCount = moods.reduce((acc, mood) => acc + mood.count, 0)
 
+  const scrollToSection = (sectionId: string) => {
+    const sectionElement = document.getElementById(sectionId)
+    if (!sectionElement) return
+    sectionElement.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
+  const renderBinderRing = (section: (typeof dashboardSections)[number]) => {
+    const isActive = activeSection === section.id
+    const SectionIcon = section.icon
+    const gradientStart = adjustColor(section.color, 30)
+    const gradientEnd = adjustColor(section.color, -20)
+    const bezelColor = adjustColor(section.color, -18)
+
+    return (
+      <Tooltip key={section.id}>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={() => scrollToSection(section.id)}
+            aria-label={`Jump to ${section.label}`}
+            className={cn(
+              "relative h-16 w-16 rounded-full border-2 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
+              isActive ? "scale-105" : "scale-95 hover:scale-105"
+            )}
+            style={{
+              background: `linear-gradient(135deg, ${gradientStart} 0%, ${gradientEnd} 100%)`,
+              boxShadow:
+                "inset 6px 6px 12px rgba(0,0,0,0.16), inset -4px -4px 10px rgba(255,255,255,0.7), 0 18px 28px rgba(15,23,42,0.18)",
+              borderColor: `${bezelColor}`,
+            }}
+          >
+            <span
+              className="absolute inset-1.5 rounded-full border border-white/40"
+              style={{
+                boxShadow: "0 8px 12px rgba(15,23,42,0.12) inset, 0 -8px 12px rgba(255,255,255,0.15) inset",
+                background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.45), transparent 60%)`,
+              }}
+            />
+            <SectionIcon className="relative z-10 h-6 w-6 text-white drop-shadow-md" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent
+          side="right"
+          className="bg-[#2c3e50]/95 text-white shadow-xl"
+        >
+          <p className="text-sm font-semibold handwritten">{section.label}</p>
+          <p className="text-xs opacity-80 max-w-48">{section.description}</p>
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-[#f5e6d3] pb-20">
+    <div className="relative min-h-screen pb-24">
       {/* Header */}
-      <header className="border-b border-[#d4b896] bg-[#faf5ed]/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="sticky top-0 z-30 border-b border-[#d4b896]/60 bg-white/80 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
@@ -91,14 +212,8 @@ export default function DashboardPage() {
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
         >
-          <div className="absolute -left-8 top-4 flex flex-col gap-8 hidden md:flex">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="w-6 h-6 rounded-full bg-[#d4b896] shadow-inner" />
-            ))}
-          </div>
-
-          <div className="bg-white shadow-xl rounded-r-lg border-l-4 border-[#3498db] p-8 relative overflow-hidden">
-            <div className="absolute left-16 top-0 bottom-0 w-[2px] bg-[#3498db]/20" />
+          <div className="bg-[#faf5ed] shadow-xl rounded-r-lg border-l-4 border-[#d4a574] p-8 relative overflow-hidden">
+            <div className="absolute left-16 top-0 bottom-0 w-0.5 bg-[#d4a574]/20" />
             <div className="absolute inset-0 pointer-events-none opacity-10">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="h-8 border-b border-[#a8d5e2]" />
@@ -122,24 +237,18 @@ export default function DashboardPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* On This Day */}
             <div
-              className={`transition-all duration-700 delay-100 ${
+              id="on-this-day"
+              className={`scroll-mt-36 transition-all duration-700 delay-100 ${
                 mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
             >
-              <h2 className="text-3xl handwritten font-bold mb-4 flex items-center gap-2 text-[#2c3e50]">
-                <Calendar className="w-7 h-7 text-[#3498db]" />
+              <h2 className="text-3xl handwritten font-bold mb-4 text-[#8b6f47]">
                 On This Day
               </h2>
               <div className="space-y-4">
                 {memories.map((memory, index) => (
                   <div key={memory.id} className="relative">
-                    <div className="absolute -left-8 top-8 flex flex-col gap-16 hidden md:flex">
-                      {[...Array(2)].map((_, i) => (
-                        <div key={i} className="w-6 h-6 rounded-full bg-[#d4b896] shadow-inner" />
-                      ))}
-                    </div>
-
-                    <div className="bg-white shadow-lg rounded-r-lg border-l-4 border-[#3498db] overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+                    <div className="bg-[#faf5ed] shadow-lg rounded-r-lg border-l-4 border-[#d4a574] overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer">
                       <div className="flex flex-col md:flex-row">
                         <div className="md:w-1/3 h-48 md:h-auto relative overflow-hidden">
                           {/* Tape Effect on Image */}
@@ -152,7 +261,7 @@ export default function DashboardPage() {
                           <div className="absolute top-3 right-3 text-4xl">{memory.mood}</div>
                         </div>
                         <div className="md:w-2/3 p-6 relative">
-                          <div className="absolute left-16 top-0 bottom-0 w-[2px] bg-[#3498db]/20" />
+                          <div className="absolute left-16 top-0 bottom-0 w-0.5 bg-[#d4a574]/20" />
                           <div className="absolute inset-0 pointer-events-none opacity-10">
                             {[...Array(8)].map((_, i) => (
                               <div key={i} className="h-8 border-b border-[#a8d5e2]" />
@@ -174,26 +283,22 @@ export default function DashboardPage() {
 
             {/* Reminders */}
             <div
-              className={`transition-all duration-700 delay-300 ${
+              id="upcoming-reminders"
+              className={`scroll-mt-36 transition-all duration-700 delay-300 ${
                 mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
             >
-              <h2 className="text-3xl handwritten font-bold mb-4 flex items-center gap-2 text-[#2c3e50]">
-                <Clock className="w-7 h-7 text-[#3498db]" />
+              <h2 className="text-3xl handwritten font-bold mb-4 text-[#8b6f47]">
                 Upcoming Reminders
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {reminders.map((reminder, index) => (
                   <div key={reminder.id} className="relative">
-                    <div className="absolute -left-8 top-4 hidden md:block">
-                      <div className="w-6 h-6 rounded-full bg-[#d4b896] shadow-inner" />
-                    </div>
-
                     <div
-                      className="bg-white shadow-lg rounded-r-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-l-4 relative overflow-hidden"
-                      style={{ borderLeftColor: reminder.color }}
+                      className="bg-[#fef9f3] shadow-lg rounded-r-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-l-4 relative overflow-hidden"
+                      style={{ borderLeftColor: '#d4a574' }}
                     >
-                      <div className="absolute left-12 top-0 bottom-0 w-[2px]" style={{ backgroundColor: reminder.color + '20' }} />
+                      <div className="absolute left-12 top-0 bottom-0 w-0.5 bg-[#d4a574]/20" />
                       <div className="absolute inset-0 pointer-events-none opacity-10">
                         {[...Array(6)].map((_, i) => (
                           <div key={i} className="h-6 border-b border-[#a8d5e2]" />
@@ -202,7 +307,7 @@ export default function DashboardPage() {
                       
                       <div className="relative pl-8">
                         <h3 className="text-xl handwritten font-bold text-[#2c3e50] mb-2">{reminder.title}</h3>
-                        <p className="text-lg handwritten font-semibold" style={{ color: reminder.color }}>
+                        <p className="text-lg handwritten font-semibold text-[#d4a574]">
                           {reminder.date}
                         </p>
                       </div>
@@ -216,22 +321,16 @@ export default function DashboardPage() {
           {/* Right Column - Mood Tracker */}
           <div className="space-y-6">
             <div
-              className={`relative transition-all duration-700 delay-200 ${
+              id="mood-journey"
+              className={`relative scroll-mt-36 transition-all duration-700 delay-200 ${
                 mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
             >
-              <div className="absolute -left-8 top-20 flex flex-col gap-16 hidden md:flex">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="w-6 h-6 rounded-full bg-[#d4b896] shadow-inner" />
-                ))}
-              </div>
-
-              <h2 className="text-3xl handwritten font-bold mb-4 flex items-center gap-2 text-[#2c3e50]">
-                <Heart className="w-7 h-7 text-[#ff9a8b]" />
+              <h2 className="text-3xl handwritten font-bold mb-4 text-[#8b6f47]">
                 Mood Journey
               </h2>
-              <div className="bg-white shadow-lg rounded-r-lg border-l-4 border-[#ff9a8b] p-6 relative overflow-hidden">
-                <div className="absolute left-16 top-0 bottom-0 w-[2px] bg-[#ff9a8b]/20" />
+              <div className="bg-[#faf5ed] shadow-lg rounded-r-lg border-l-4 border-[#d4a574] p-6 relative overflow-hidden">
+                <div className="absolute left-16 top-0 bottom-0 w-0.5 bg-[#d4a574]/20" />
                 <div className="absolute inset-0 pointer-events-none opacity-10">
                   {[...Array(30)].map((_, i) => (
                     <div key={i} className="h-8 border-b border-[#a8d5e2]" />

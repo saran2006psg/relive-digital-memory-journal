@@ -6,7 +6,10 @@ import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "ReLive - Your Personal Digital Diary",
-  description: "A nostalgic digital diary and memory-keeping website. Write daily journal entries, upload photos and videos, tag emotions, and revisit your beautiful moments.",
+  description:  "A nostalgic digital diary and memory-keeping website. Write daily journal entries, upload photos and videos, tag emotions, and revisit your beautiful moments.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
