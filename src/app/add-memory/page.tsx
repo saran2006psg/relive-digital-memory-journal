@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { UserMenu } from "@/components/UserMenu"
 
 const moodEmojis = [
   { emoji: "😊", label: "Happy", color: "#B5D99C" },
@@ -89,6 +90,7 @@ export default function AddMemoryPage() {
               <Link href="/gallery" className="text-sm handwritten font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
                 Gallery
               </Link>
+              <UserMenu />
             </nav>
           </div>
         </div>
@@ -126,10 +128,189 @@ export default function AddMemoryPage() {
           </div>
         </div>
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Text Editor */}
-          <div className="space-y-6">
+        {/* Two Column Layout - Reversed */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* Left Column - Mood, Tags, Media (Smaller - 2 cols) */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Mood Selector - Compact */}
+            <div className="relative">
+              <div className="absolute -left-8 top-4 flex flex-col gap-8 hidden md:flex">
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="w-6 h-6 rounded-full bg-[#d4b896] shadow-inner" />
+                ))}
+              </div>
+
+              <div className="bg-white shadow-lg rounded-r-lg border-l-4 border-[#ff9a8b] p-4 relative overflow-hidden">
+                <div className="relative pl-6">
+                  <h3 className="text-lg handwritten font-bold mb-3 text-[#2c3e50]">How are you feeling?</h3>
+                  <div className="grid grid-cols-6 gap-2">
+                    {moodEmojis.map((mood) => (
+                      <button
+                        key={mood.label}
+                        onClick={() => setSelectedMood(mood.emoji)}
+                        className={`aspect-square rounded-lg flex items-center justify-center text-2xl transition-all duration-200 hover:scale-110 ${
+                          selectedMood === mood.emoji
+                            ? 'ring-2 ring-[#3498db] shadow-md scale-105'
+                            : 'hover:bg-[#fef9f3]'
+                        }`}
+                        style={{
+                          backgroundColor: selectedMood === mood.emoji ? mood.color + '40' : 'transparent'
+                        }}
+                        title={mood.label}
+                      >
+                        {mood.emoji}
+                      </button>
+                    ))}
+                  </div>
+                  {selectedMood && (
+                    <p className="text-sm handwritten text-center mt-2 text-[#7f8c8d]">
+                      Feeling {moodEmojis.find(m => m.emoji === selectedMood)?.label}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Tags - Compact */}
+            <div className="relative">
+              <div className="absolute -left-8 top-4 flex flex-col gap-8 hidden md:flex">
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="w-6 h-6 rounded-full bg-[#d4b896] shadow-inner" />
+                ))}
+              </div>
+
+              <div className="bg-white shadow-lg rounded-r-lg border-l-4 border-[#8dd3c7] p-4 relative overflow-hidden">
+                <div className="relative pl-6">
+                  <h3 className="text-lg handwritten font-bold mb-3 text-[#2c3e50]">Tags</h3>
+                  
+                  {/* Tag Input */}
+                  <div className="flex gap-2 mb-3">
+                    <Input
+                      placeholder="Add a tag..."
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleAddTag(tagInput)
+                        }
+                      }}
+                      className="handwritten text-sm bg-[#fef9f3] border-[#d4b896]"
+                    />
+                    <Button
+                      onClick={() => handleAddTag(tagInput)}
+                      variant="outline"
+                      size="sm"
+                      className="handwritten text-xs"
+                    >
+                      Add
+                    </Button>
+                  </div>
+
+                  {/* Tag Suggestions */}
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {tagSuggestions.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => handleAddTag(tag)}
+                        className="px-2 py-0.5 text-xs handwritten font-medium rounded-full border border-dashed border-[#d4b896] hover:bg-[#fef9f3] hover:border-[#3498db] transition-colors"
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Selected Tags - Sticky Note Style */}
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map((tag, index) => {
+                        const colors = ['#B5D99C', '#8dd3c7', '#ff9a8b', '#3498db', '#C8B8DB', '#FFD56F']
+                        return (
+                          <div
+                            key={tag}
+                            className="px-2 py-1 shadow-md relative text-xs"
+                            style={{ 
+                              backgroundColor: colors[index % colors.length],
+                              transform: `rotate(${(index % 2 === 0 ? 1 : -1) * 2}deg)`
+                            }}
+                          >
+                            <span className="text-xs handwritten font-bold text-white">
+                              #{tag}
+                            </span>
+                            <button
+                              onClick={() => handleRemoveTag(tag)}
+                              className="ml-1 hover:scale-110 transition-transform"
+                            >
+                              <X className="w-2.5 h-2.5 text-white" />
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Media Upload - Compact */}
+            <div className="relative">
+              <div className="absolute -left-8 top-4 flex flex-col gap-8 hidden md:flex">
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="w-6 h-6 rounded-full bg-[#d4b896] shadow-inner" />
+                ))}
+              </div>
+
+              <div className="bg-white shadow-lg rounded-r-lg border-l-4 border-[#b5d99c] p-4 relative overflow-hidden">
+                <div className="relative pl-6">
+                  <h3 className="text-lg handwritten font-bold mb-3 text-[#2c3e50]">Photos & Videos</h3>
+                  
+                  {/* Upload Button - Smaller */}
+                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-[#d4b896] rounded-lg p-4 cursor-pointer hover:border-[#3498db] hover:bg-[#fef9f3] transition-all duration-200">
+                    <div className="flex gap-2 mb-1">
+                      <ImageIcon className="w-5 h-5 text-[#7f8c8d]" />
+                      <Video className="w-5 h-5 text-[#7f8c8d]" />
+                    </div>
+                    <p className="text-xs handwritten text-[#7f8c8d] text-center">
+                      Click to upload photos or videos
+                    </p>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*,video/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {/* Uploaded Files Preview - Smaller Grid */}
+                  {uploadedFiles.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      {uploadedFiles.map((file, index) => (
+                        <div key={index} className="relative">
+                          <div className="relative aspect-square rounded-sm overflow-hidden shadow-md group">
+                            <img
+                              src={file}
+                              alt={`Upload ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              onClick={() => setUploadedFiles(uploadedFiles.filter((_, i) => i !== index))}
+                              className="absolute top-1 right-1 p-0.5 bg-[#e74c3c] text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Text Editor (Larger - 3 cols) */}
+          <div className="lg:col-span-3 space-y-6">
             <div className="relative">
               <div className="absolute -left-8 top-8 flex flex-col gap-16 hidden md:flex">
                 {[...Array(5)].map((_, i) => (
@@ -190,7 +371,7 @@ export default function AddMemoryPage() {
                     </div>
                   </div>
 
-                  {/* Content Textarea */}
+                  {/* Content Textarea - LARGER */}
                   <div className="space-y-2">
                     <Label htmlFor="content" className="text-base handwritten font-semibold text-[#2c3e50]">
                       Your Story
@@ -200,220 +381,12 @@ export default function AddMemoryPage() {
                       placeholder="Pour your heart out... What happened? How did you feel?"
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
-                      className="min-h-[300px] resize-none bg-transparent border-[#d4b896] text-xl handwritten leading-relaxed text-[#2c3e50]"
+                      className="min-h-[500px] resize-none bg-transparent border-[#d4b896] text-xl handwritten leading-relaxed text-[#2c3e50]"
                     />
                     <p className="text-sm handwritten text-[#7f8c8d]">
                       {content.length} characters
                     </p>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Media & Metadata */}
-          <div className="space-y-6">
-            {/* Mood Selector */}
-            <div className="relative">
-              <div className="absolute -left-8 top-8 flex flex-col gap-12 hidden md:flex">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="w-6 h-6 rounded-full bg-[#d4b896] shadow-inner" />
-                ))}
-              </div>
-
-              <div className="bg-white shadow-xl rounded-r-lg border-l-4 border-[#ff9a8b] p-6 relative overflow-hidden">
-                <div className="absolute left-16 top-0 bottom-0 w-[2px] bg-[#ff9a8b]/20" />
-                <div className="absolute inset-0 pointer-events-none opacity-10">
-                  {[...Array(15)].map((_, i) => (
-                    <div key={i} className="h-8 border-b border-[#a8d5e2]" />
-                  ))}
-                </div>
-
-                <div className="relative pl-12">
-                  <h3 className="text-2xl handwritten font-bold mb-4 text-[#2c3e50]">How are you feeling?</h3>
-                  <div className="grid grid-cols-6 gap-3">
-                    {moodEmojis.map((mood) => (
-                      <button
-                        key={mood.label}
-                        onClick={() => setSelectedMood(mood.emoji)}
-                        className={`aspect-square rounded-lg flex items-center justify-center text-3xl transition-all duration-200 hover:scale-110 ${
-                          selectedMood === mood.emoji
-                            ? 'ring-2 ring-[#3498db] shadow-md scale-105'
-                            : 'hover:bg-[#fef9f3]'
-                        }`}
-                        style={{
-                          backgroundColor: selectedMood === mood.emoji ? mood.color + '40' : 'transparent'
-                        }}
-                        title={mood.label}
-                      >
-                        {mood.emoji}
-                      </button>
-                    ))}
-                  </div>
-                  {selectedMood && (
-                    <p className="text-lg handwritten text-center mt-4 text-[#7f8c8d]">
-                      Feeling {moodEmojis.find(m => m.emoji === selectedMood)?.label}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Tags */}
-            <div className="relative">
-              <div className="absolute -left-8 top-8 flex flex-col gap-12 hidden md:flex">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="w-6 h-6 rounded-full bg-[#d4b896] shadow-inner" />
-                ))}
-              </div>
-
-              <div className="bg-white shadow-xl rounded-r-lg border-l-4 border-[#8dd3c7] p-6 relative overflow-hidden">
-                <div className="absolute left-16 top-0 bottom-0 w-[2px] bg-[#8dd3c7]/20" />
-                <div className="absolute inset-0 pointer-events-none opacity-10">
-                  {[...Array(15)].map((_, i) => (
-                    <div key={i} className="h-8 border-b border-[#a8d5e2]" />
-                  ))}
-                </div>
-
-                <div className="relative pl-12">
-                  <h3 className="text-2xl handwritten font-bold mb-4 text-[#2c3e50]">Tags</h3>
-                  
-                  {/* Tag Input */}
-                  <div className="flex gap-2 mb-4">
-                    <Input
-                      placeholder="Add a tag..."
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          handleAddTag(tagInput)
-                        }
-                      }}
-                      className="handwritten bg-[#fef9f3] border-[#d4b896]"
-                    />
-                    <Button
-                      onClick={() => handleAddTag(tagInput)}
-                      variant="outline"
-                      size="sm"
-                      className="handwritten"
-                    >
-                      Add
-                    </Button>
-                  </div>
-
-                  {/* Tag Suggestions */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {tagSuggestions.map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => handleAddTag(tag)}
-                        className="px-3 py-1 text-sm handwritten font-medium rounded-full border-2 border-dashed border-[#d4b896] hover:bg-[#fef9f3] hover:border-[#3498db] transition-colors"
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Selected Tags - Sticky Note Style */}
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-3">
-                      {tags.map((tag, index) => {
-                        const colors = ['#B5D99C', '#8dd3c7', '#ff9a8b', '#3498db', '#C8B8DB', '#FFD56F']
-                        return (
-                          <div
-                            key={tag}
-                            className="px-4 py-2 shadow-md relative"
-                            style={{ 
-                              backgroundColor: colors[index % colors.length],
-                              transform: `rotate(${(index % 2 === 0 ? 1 : -1) * 2}deg)`
-                            }}
-                          >
-                            <span className="text-sm handwritten font-bold text-white">
-                              #{tag}
-                            </span>
-                            <button
-                              onClick={() => handleRemoveTag(tag)}
-                              className="ml-2 hover:scale-110 transition-transform"
-                            >
-                              <X className="w-3 h-3 text-white" />
-                            </button>
-                            {/* Sticky note fold */}
-                            <div 
-                              className="absolute bottom-0 right-0 w-0 h-0 border-l-[12px] border-l-transparent border-b-[12px]"
-                              style={{ borderBottomColor: colors[index % colors.length], filter: 'brightness(0.7)' }}
-                            />
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Media Upload */}
-            <div className="relative">
-              <div className="absolute -left-8 top-8 flex flex-col gap-12 hidden md:flex">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="w-6 h-6 rounded-full bg-[#d4b896] shadow-inner" />
-                ))}
-              </div>
-
-              <div className="bg-white shadow-xl rounded-r-lg border-l-4 border-[#b5d99c] p-6 relative overflow-hidden">
-                <div className="absolute left-16 top-0 bottom-0 w-[2px] bg-[#b5d99c]/20" />
-                <div className="absolute inset-0 pointer-events-none opacity-10">
-                  {[...Array(15)].map((_, i) => (
-                    <div key={i} className="h-8 border-b border-[#a8d5e2]" />
-                  ))}
-                </div>
-
-                <div className="relative pl-12">
-                  <h3 className="text-2xl handwritten font-bold mb-4 text-[#2c3e50]">Photos & Videos</h3>
-                  
-                  {/* Upload Button */}
-                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-[#d4b896] rounded-lg p-8 cursor-pointer hover:border-[#3498db] hover:bg-[#fef9f3] transition-all duration-200">
-                    <div className="flex gap-3 mb-2">
-                      <ImageIcon className="w-8 h-8 text-[#7f8c8d]" />
-                      <Video className="w-8 h-8 text-[#7f8c8d]" />
-                    </div>
-                    <p className="text-base handwritten text-[#7f8c8d] text-center">
-                      Click to upload photos or videos
-                    </p>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*,video/*"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </label>
-
-                  {/* Uploaded Files Preview - Polaroid Style */}
-                  {uploadedFiles.length > 0 && (
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                      {uploadedFiles.map((file, index) => (
-                        <div key={index} className="relative">
-                          {/* Tape Effect */}
-                          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-16 h-5 bg-[#fef9f3] opacity-60 shadow-sm rotate-[-5deg] z-10" />
-                          
-                          <div className="relative aspect-square rounded-sm overflow-hidden shadow-md group">
-                            <img
-                              src={file}
-                              alt={`Upload ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                            <button
-                              onClick={() => setUploadedFiles(uploadedFiles.filter((_, i) => i !== index))}
-                              className="absolute top-2 right-2 p-1 bg-[#e74c3c] text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

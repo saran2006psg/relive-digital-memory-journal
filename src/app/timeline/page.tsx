@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { BookOpen, Calendar, MapPin, Tag, X } from "lucide-react"
+import { useState } from "react"
+import { BookOpen, Calendar, MapPin, Tag, Clock, Heart, Sparkles } from "lucide-react"
 import Link from "next/link"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { UserMenu } from "@/components/UserMenu"
 
 const memories = [
   {
@@ -127,16 +126,6 @@ const years = Object.keys(groupedMemories).map(Number).sort((a, b) => b - a)
 
 export default function TimelinePage() {
   const [selectedMemory, setSelectedMemory] = useState<typeof memories[0] | null>(null)
-  const [scrollY, setScrollY] = useState(0)
-  const timelineRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   return (
     <div className="min-h-screen">
@@ -149,275 +138,237 @@ export default function TimelinePage() {
               <span className="text-2xl handwritten font-bold text-[#8b6f47]">ReLive</span>
             </Link>
             <nav className="flex items-center gap-6">
-              <Link href="/dashboard" className="text-sm font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
+              <Link href="/dashboard" className="text-sm handwritten font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
                 Dashboard
               </Link>
-              <Link href="/add-memory" className="text-sm font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
+              <Link href="/add-memory" className="text-sm handwritten font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
                 Add Memory
               </Link>
-              <Link href="/timeline" className="text-sm font-medium text-[#8b6f47] handwritten">
+              <Link href="/timeline" className="text-sm handwritten font-semibold text-[#8b6f47]">
                 Timeline
               </Link>
-              <Link href="/gallery" className="text-sm font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
+              <Link href="/gallery" className="text-sm handwritten font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
                 Gallery
               </Link>
+              <UserMenu />
             </nav>
           </div>
         </div>
       </header>
 
-      {/* Page Header - Notebook Style */}
-      <div className="container mx-auto px-4 py-12 max-w-5xl">
-        <div className="relative">
-          {/* Spiral Binding Holes */}
-          <div className="absolute -left-8 top-0 flex flex-col gap-12 hidden md:flex">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="w-6 h-6 rounded-full bg-[#d4b896] shadow-inner" />
-            ))}
+      {/* Page Header */}
+      <div className="container mx-auto px-4 py-12 max-w-6xl">
+        <div className="text-center mb-4">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <Clock className="w-8 h-8 text-[#8b6f47]" />
+            <Sparkles className="w-6 h-6 text-[#d4a574]" />
           </div>
-          
-          <div className="bg-white shadow-2xl rounded-r-lg border-l-4 border-[#3498db] p-8 relative overflow-hidden">
-            {/* Margin Line */}
-            <div className="absolute left-16 top-0 bottom-0 w-[2px] bg-[#3498db]/30" />
-            
-            {/* Ruled Lines Background */}
-            <div className="absolute inset-0 pointer-events-none opacity-20">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="h-10 border-b border-[#a8d5e2]" />
-              ))}
-            </div>
-            
-            <div className="relative pl-12">
-              <h1 className="text-5xl md:text-6xl handwritten font-bold text-[#2c3e50] leading-tight">
-                Your Journey
-              </h1>
-              <p className="text-2xl handwritten text-[#7f8c8d] mt-2">
-                A timeline of your beautiful moments
-              </p>
-            </div>
-          </div>
+          <h1 className="text-6xl handwritten font-bold text-[#2c3e50] mb-3">
+            Your Journey
+          </h1>
+          <p className="text-xl handwritten text-[#7f8c8d]">
+            {memories.length} precious moments captured in time
+          </p>
         </div>
       </div>
 
-      {/* Timeline - Notebook Pages */}
-      <div ref={timelineRef} className="container mx-auto px-4 pb-20 max-w-5xl relative">
-        {years.map((year, yearIndex) => (
-          <div key={year} className="mb-16">
-            {/* Year Tab - Like Notebook Divider */}
-            <div className="flex items-center mb-12 relative">
-              <div className="absolute -left-8 flex flex-col gap-8 hidden md:flex">
-                {[...Array(2)].map((_, i) => (
-                  <div key={i} className="w-6 h-6 rounded-full bg-[#d4b896] shadow-inner" />
-                ))}
-              </div>
-              
-              <div className="bg-gradient-to-r from-[#3498db] to-[#2980b9] text-white px-8 py-4 rounded-r-xl shadow-xl relative">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-white/30" />
-                <h2 className="text-4xl handwritten font-bold">{year}</h2>
-              </div>
-            </div>
+      {/* Timeline */}
+      <div className="container mx-auto px-4 pb-20 max-w-4xl">
+        <div className="relative">
+          {/* Vertical Timeline Line */}
+          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-[#d4a574] via-[#8b6f47] to-[#d4a574]" />
 
-            {/* Memories for this year - Notebook Entry Style */}
-            <div className="space-y-12">
-              {groupedMemories[year].map((memory, index) => (
-                <div key={memory.id} className="relative">
-                  {/* Spiral Binding Holes */}
-                  <div className="absolute -left-8 top-8 flex flex-col gap-16 hidden md:flex">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="w-6 h-6 rounded-full bg-[#d4b896] shadow-inner" />
-                    ))}
-                  </div>
-                  
-                  {/* Notebook Page */}
-                  <div 
-                    className="bg-white shadow-xl rounded-r-lg border-l-4 p-8 relative overflow-hidden cursor-pointer hover:shadow-2xl transition-all duration-300 group"
-                    style={{ borderLeftColor: memory.color }}
-                    onClick={() => setSelectedMemory(memory)}
-                  >
-                    {/* Margin Line */}
-                    <div 
-                      className="absolute left-20 top-0 bottom-0 w-[2px]"
-                      style={{ backgroundColor: memory.color + '30' }}
+          {years.map((year, yearIndex) => (
+            <div key={year} className="mb-16">
+              {/* Year Badge */}
+              <div className="relative flex justify-center mb-12">
+                <div className="bg-gradient-to-r from-[#8b6f47] to-[#d4a574] text-white px-8 py-3 rounded-full shadow-xl z-10 transform hover:scale-110 transition-transform duration-300">
+                  <h2 className="text-3xl handwritten font-bold">{year}</h2>
+                </div>
+              </div>
+
+              {/* Memories */}
+              {groupedMemories[year].map((memory, index) => {
+                const isLeft = index % 2 === 0
+
+                return (
+                  <div key={memory.id} className="relative mb-12">
+                    {/* Timeline Dot */}
+                    <div className="absolute left-8 md:left-1/2 -translate-x-1/2 w-6 h-6 rounded-full shadow-lg z-10 ring-4 ring-white"
+                      style={{ backgroundColor: memory.color }}
                     />
-                    
-                    {/* Ruled Lines Background */}
-                    <div className="absolute inset-0 pointer-events-none opacity-10">
-                      {[...Array(20)].map((_, i) => (
-                        <div key={i} className="h-8 border-b border-[#a8d5e2]" />
-                      ))}
-                    </div>
-                    
-                    <div className="relative pl-16">
-                      {/* Date Header */}
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className="w-14 h-14 rounded-full flex items-center justify-center text-3xl shadow-lg"
+
+                    {/* Memory Card */}
+                    <div className={`relative md:w-[calc(50%-3rem)] ${isLeft ? 'md:mr-auto md:pr-12' : 'md:ml-auto md:pl-12'} ml-16 md:ml-0`}>
+                      <div
+                        className="bg-[#faf5ed] rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer group border-2 border-[#d4b896]/30"
+                        onClick={() => setSelectedMemory(memory)}
+                      >
+                        {/* Image Section - Smaller */}
+                        <div className="relative h-32 overflow-hidden">
+                          <img
+                            src={memory.image}
+                            alt={memory.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          {/* Mood Badge Overlay */}
+                          <div
+                            className="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-lg border-2 border-white"
                             style={{ backgroundColor: memory.color }}
                           >
                             {memory.mood}
                           </div>
-                          <div>
-                            <h3 className="text-3xl handwritten font-bold text-[#2c3e50] leading-tight">
-                              {memory.title}
-                            </h3>
-                            <p className="text-base handwritten text-[#7f8c8d] mt-1">
-                              {memory.month} {memory.day}, {memory.year}
-                            </p>
-                          </div>
                         </div>
-                      </div>
 
-                      {/* Photo - Taped Effect */}
-                      <div className="relative mb-6 inline-block">
-                        {/* Tape Effect */}
-                        <div className="absolute -top-3 left-8 w-20 h-6 bg-[#fef9f3] opacity-60 shadow-sm rotate-[-5deg] z-10" />
-                        <div className="absolute -top-3 right-8 w-20 h-6 bg-[#fef9f3] opacity-60 shadow-sm rotate-[5deg] z-10" />
-                        
-                        <img
-                          src={memory.image}
-                          alt={memory.title}
-                          className="w-full max-w-2xl rounded-sm shadow-lg group-hover:shadow-xl transition-shadow duration-300"
-                        />
-                      </div>
-
-                      {/* Memory Text */}
-                      <p className="text-xl handwritten leading-relaxed text-[#34495e] mb-6 max-w-2xl">
-                        {memory.content}
-                      </p>
-
-                      {/* Location */}
-                      {memory.location && (
-                        <div className="flex items-center gap-2 text-base handwritten text-[#7f8c8d] mb-4">
-                          <MapPin className="w-4 h-4" />
-                          <span>{memory.location}</span>
-                        </div>
-                      )}
-
-                      {/* Tags - Like Sticky Notes */}
-                      <div className="flex flex-wrap gap-3">
-                        {memory.tags.map((tag, tagIndex) => (
-                          <div
-                            key={tag}
-                            className="px-4 py-2 shadow-md relative group-hover:shadow-lg transition-shadow"
-                            style={{ 
-                              backgroundColor: memory.color,
-                              transform: `rotate(${(tagIndex % 2 === 0 ? 1 : -1) * 2}deg)`
-                            }}
-                          >
-                            <span className="text-sm handwritten font-bold text-white">
-                              #{tag}
+                        {/* Content Section - Compact */}
+                        <div className="p-4">
+                          {/* Date Badge */}
+                          <div className="inline-flex items-center gap-2 bg-white px-3 py-1 rounded-full mb-3 shadow-sm">
+                            <Calendar className="w-3 h-3 text-[#8b6f47]" />
+                            <span className="text-xs handwritten font-semibold text-[#8b6f47]">
+                              {memory.month} {memory.day}
                             </span>
-                            {/* Sticky note fold */}
-                            <div 
-                              className="absolute bottom-0 right-0 w-0 h-0 border-l-[12px] border-l-transparent border-b-[12px]"
-                              style={{ borderBottomColor: memory.color, filter: 'brightness(0.7)' }}
-                            />
                           </div>
-                        ))}
+
+                          {/* Title */}
+                          <h3 className="text-xl handwritten font-bold text-[#2c3e50] mb-2 line-clamp-1">
+                            {memory.title}
+                          </h3>
+
+                          {/* Content Preview */}
+                          <p className="text-sm handwritten text-[#7f8c8d] mb-3 line-clamp-2">
+                            {memory.content}
+                          </p>
+
+                          {/* Location */}
+                          {memory.location && (
+                            <div className="flex items-center gap-1 text-xs handwritten text-[#7f8c8d] mb-3">
+                              <MapPin className="w-3 h-3" />
+                              <span className="truncate">{memory.location}</span>
+                            </div>
+                          )}
+
+                          {/* Tags */}
+                          <div className="flex flex-wrap gap-2">
+                            {memory.tags.slice(0, 2).map((tag) => (
+                              <span
+                                key={tag}
+                                className="px-2 py-1 rounded-full text-xs handwritten font-medium border"
+                                style={{
+                                  borderColor: memory.color,
+                                  color: memory.color,
+                                  backgroundColor: memory.color + '15'
+                                }}
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            {memory.tags.length > 2 && (
+                              <span className="px-2 py-1 text-xs handwritten text-[#7f8c8d]">
+                                +{memory.tags.length - 2}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Click indicator */}
+                        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="bg-white/95 p-2 rounded-full shadow-lg">
+                            <Sparkles className="w-4 h-4 text-[#8b6f47]" />
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Decorative Corner Fold */}
-                      <div className="absolute top-0 right-0 w-0 h-0 border-t-[40px] border-t-[#f5f5f5] border-l-[40px] border-l-transparent" />
+                      {/* Arrow pointing to timeline */}
+                      <div className={`hidden md:block absolute top-16 ${isLeft ? 'right-0' : 'left-0'} w-12 h-0.5`}
+                        style={{ backgroundColor: memory.color + '60' }}
+                      />
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                )
+              })}
           </div>
         ))}
 
-        {/* End of Timeline */}
-        <div className="flex items-center justify-center mt-20">
-          <div className="bg-white px-8 py-4 rounded-full shadow-xl border-4 border-[#d4b896]">
-            <p className="text-lg handwritten text-[#7f8c8d] font-semibold">
-              The beginning of your journey ✨
-            </p>
+          {/* Timeline End Marker */}
+          <div className="relative flex justify-center">
+            <div className="bg-[#faf5ed] border-4 border-[#d4a574] text-[#8b6f47] w-16 h-16 rounded-full shadow-xl z-10 flex items-center justify-center">
+              <Heart className="w-8 h-8 fill-[#d4a574]" />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Memory Detail Dialog - Full Notebook Page */}
-      <Dialog open={!!selectedMemory} onOpenChange={() => setSelectedMemory(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white border-4 border-[#d4b896] p-0">
+      {/* Detailed View Dialog */}
+      <Dialog open={selectedMemory !== null} onOpenChange={() => setSelectedMemory(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-[#faf5ed]">
           {selectedMemory && (
             <div className="relative">
-              {/* Ruled Lines Background */}
-              <div className="absolute inset-0 pointer-events-none opacity-10">
-                {[...Array(40)].map((_, i) => (
-                  <div key={i} className="h-8 border-b border-[#a8d5e2]" />
-                ))}
+              {/* Large Image */}
+              <div className="w-full h-96 overflow-hidden rounded-lg mb-6">
+                <img
+                  src={selectedMemory.image}
+                  alt={selectedMemory.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
 
-              <div className="relative p-12">
-                {/* Margin Line */}
-                <div className="absolute left-16 top-0 bottom-0 w-[2px] bg-[#e74c3c]/20" />
-                
-                <div className="pl-12">
-                  {/* Header */}
-                  <div className="flex items-center gap-4 mb-8">
-                    <div 
-                      className="w-16 h-16 rounded-full flex items-center justify-center text-4xl shadow-xl"
+              {/* Content */}
+              <div className="space-y-6">
+                {/* Title and Mood */}
+                <div className="flex items-start justify-between">
+                  <h2 className="text-4xl handwritten font-bold text-[#2c3e50]">
+                    {selectedMemory.title}
+                  </h2>
+                  <div className="flex flex-col items-center">
+                    <div
+                      className="w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-lg border-4 border-white"
                       style={{ backgroundColor: selectedMemory.color }}
                     >
                       {selectedMemory.mood}
                     </div>
-                    <div>
-                      <h2 className="text-5xl handwritten font-bold text-[#2c3e50] leading-tight">
-                        {selectedMemory.title}
-                      </h2>
-                      <p className="text-lg handwritten text-[#7f8c8d] mt-2">
-                        {selectedMemory.month} {selectedMemory.day}, {selectedMemory.year}
-                      </p>
-                    </div>
                   </div>
+                </div>
 
-                  {/* Photo with Tape */}
-                  <div className="relative mb-8 inline-block">
-                    <div className="absolute -top-4 left-12 w-24 h-8 bg-[#fef9f3] opacity-60 shadow-md rotate-[-3deg] z-10" />
-                    <div className="absolute -top-4 right-12 w-24 h-8 bg-[#fef9f3] opacity-60 shadow-md rotate-[3deg] z-10" />
-                    
-                    <img
-                      src={selectedMemory.image}
-                      alt={selectedMemory.title}
-                      className="w-full rounded-sm shadow-2xl"
-                    />
+                {/* Date */}
+                <div className="flex items-center gap-2 text-[#7f8c8d]">
+                  <Calendar className="w-5 h-5" />
+                  <span className="text-xl handwritten">
+                    {selectedMemory.month} {selectedMemory.day}, {selectedMemory.year}
+                  </span>
+                </div>
+
+                {/* Location */}
+                {selectedMemory.location && (
+                  <div className="flex items-center gap-2 text-[#7f8c8d]">
+                    <MapPin className="w-5 h-5" />
+                    <span className="text-lg handwritten">{selectedMemory.location}</span>
                   </div>
+                )}
 
-                  {/* Content */}
-                  <p className="text-2xl handwritten leading-relaxed text-[#34495e] mb-8">
+                {/* Content */}
+                <div className="bg-white/60 rounded-lg p-6 border-l-4" style={{ borderColor: selectedMemory.color }}>
+                  <p className="text-lg handwritten text-[#34495e] leading-relaxed">
                     {selectedMemory.content}
                   </p>
+                </div>
 
-                  {/* Metadata */}
-                  {selectedMemory.location && (
-                    <div className="flex items-center gap-2 text-lg handwritten text-[#7f8c8d] mb-6">
-                      <MapPin className="w-5 h-5" />
-                      <span>{selectedMemory.location}</span>
-                    </div>
-                  )}
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-4">
-                    {selectedMemory.tags.map((tag, tagIndex) => (
-                      <div
-                        key={tag}
-                        className="px-5 py-3 shadow-lg relative"
-                        style={{ 
-                          backgroundColor: selectedMemory.color,
-                          transform: `rotate(${(tagIndex % 2 === 0 ? 1 : -1) * 3}deg)`
-                        }}
-                      >
-                        <span className="text-base handwritten font-bold text-white">
-                          #{tag}
-                        </span>
-                        <div 
-                          className="absolute bottom-0 right-0 w-0 h-0 border-l-[16px] border-l-transparent border-b-[16px]"
-                          style={{ borderBottomColor: selectedMemory.color, filter: 'brightness(0.7)' }}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                {/* Tags */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Tag className="w-5 h-5 text-[#8b6f47]" />
+                  {selectedMemory.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-4 py-2 rounded-full text-sm handwritten font-semibold border-2"
+                      style={{
+                        borderColor: selectedMemory.color,
+                        color: selectedMemory.color,
+                        backgroundColor: selectedMemory.color + '20'
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>

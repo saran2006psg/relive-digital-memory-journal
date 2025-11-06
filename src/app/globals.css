@@ -46,10 +46,24 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  
+  /* 21.dev Button Theme */
+  --color-main: var(--main);
+  --color-text: var(--text);
+  --color-mtext: var(--mtext);
+  --color-bw: var(--bw);
+  --translate-boxShadowX: var(--box-shadow-x);
+  --translate-boxShadowY: var(--box-shadow-y);
+  --translate-reverseBoxShadowX: var(--reverse-box-shadow-x);
+  --translate-reverseBoxShadowY: var(--reverse-box-shadow-y);
+  --box-shadow-shadow: var(--shadow);
+  --font-weight-base: var(--base-font-weight);
+  
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-base: var(--border-radius);
 }
 
 :root {
@@ -91,6 +105,22 @@
   --sidebar-accent-foreground: #2c3e50;
   --sidebar-border: #d4b896;
   --sidebar-ring: #3498db;
+  --main: #88aaee;
+  --overlay: rgba(0, 0, 0, 0.8);
+  --bg: #dfe5f2;
+  --bw: #fff;
+  --blank: #000;
+  --text: #000;
+  --mtext: #000;
+  --ring-offset: #fff;
+  --border-radius: 5px;
+  --box-shadow-x: 4px;
+  --box-shadow-y: 4px;
+  --reverse-box-shadow-x: -4px;
+  --reverse-box-shadow-y: -4px;
+  --base-font-weight: 500;
+  --heading-font-weight: 700;
+  --shadow: var(--box-shadow-x) var(--box-shadow-y) 0px 0px var(--border);
 }
 
 .dark {
@@ -131,13 +161,20 @@
   --sidebar-accent-foreground: #F5EFE6;
   --sidebar-border: #4A4540;
   --sidebar-ring: #E8C7A8;
+  --bg: #272933;
+  --bw: #212121;
+  --blank: #fff;
+  --text: #e6e6e6;
+  --mtext: #000;
+  --ring-offset: #000;
+  --shadow: var(--box-shadow-x) var(--box-shadow-y) 0px 0px var(--border);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Dancing Script', cursive;
@@ -159,11 +196,11 @@
     background-size: 100% 100%, 100% 35px;
     background-repeat: no-repeat, repeat;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Dancing Script', cursive;
   }
-  
+
   .paper-texture {
     background-color: var(--color-paper);
     background-image: 
@@ -183,11 +220,11 @@
       );
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
-  
+
   .handwritten {
     font-family: 'Dancing Script', cursive;
   }
-  
+
   .notebook-line {
     background-image: repeating-linear-gradient(
       transparent,
@@ -201,4 +238,25 @@
 /* Hide Next.js error overlay portal */
 nextjs-portal {
   display: none !important;
+}
+
+@theme inline {
+  --color-main: var(----main);
+  --color-overlay: var(----overlay);
+  --color-bg: var(----bg);
+  --color-bw: var(----bw);
+  --color-blank: var(----blank);
+  --color-border: var(----border);
+  --color-text: var(----text);
+  --color-mtext: var(----mtext);
+  --color-ring: var(----ring);
+  --color-ring-offset: var(----ring-offset);
+  --border-radius: var(----border-radius);
+  --box-shadow-x: var(----box-shadow-x);
+  --box-shadow-y: var(----box-shadow-y);
+  --reverse-box-shadow-x: var(----reverse-box-shadow-x);
+  --reverse-box-shadow-y: var(----reverse-box-shadow-y);
+  --base-font-weight: var(----base-font-weight);
+  --heading-font-weight: var(----heading-font-weight);
+  --shadow: var(----shadow);
 }

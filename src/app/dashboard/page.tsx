@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { UserMenu } from "@/components/UserMenu"
 
 const moods = [
   { emoji: "😊", label: "Happy", color: "#B5D99C", count: 12 },
@@ -200,6 +201,7 @@ export default function DashboardPage() {
               <Link href="/gallery" className="text-sm handwritten font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
                 Gallery
               </Link>
+              <UserMenu />
             </nav>
           </div>
         </div>
