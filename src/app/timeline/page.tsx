@@ -7,6 +7,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { UserMenu } from "@/components/UserMenu"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { createBrowserClient } from "@supabase/ssr"
+import { getThumbnailUrl, getOptimizedImageUrl, isCloudinaryUrl } from "@/lib/cloudinary"
 
 interface Memory {
   id: string
@@ -255,9 +256,21 @@ export default function TimelinePage() {
                         {/* Image Section - Smaller */}
                         <div className="relative h-32 overflow-hidden">
                           <img
-                            src={memory.image}
+                            src={
+                              memory.image && isCloudinaryUrl(memory.image)
+                                ? getOptimizedImageUrl(memory.image, {
+                                    width: 600,
+                                    height: 300,
+                                    quality: 'auto:good',
+                                    format: 'auto',
+                                    crop: 'fill',
+                                    gravity: 'auto'
+                                  })
+                                : memory.image
+                            }
                             alt={memory.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            loading="lazy"
                           />
                           {/* Mood Badge Overlay */}
                           <div
@@ -355,7 +368,16 @@ export default function TimelinePage() {
               {/* Large Image */}
               <div className="w-full h-96 overflow-hidden rounded-lg mb-6">
                 <img
-                  src={selectedMemory.image}
+                  src={
+                    selectedMemory.image && isCloudinaryUrl(selectedMemory.image)
+                      ? getOptimizedImageUrl(selectedMemory.image, {
+                          width: 1200,
+                          quality: 'auto:good',
+                          format: 'auto',
+                          crop: 'limit'
+                        })
+                      : selectedMemory.image
+                  }
                   alt={selectedMemory.title}
                   className="w-full h-full object-cover"
                 />

@@ -8,6 +8,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { UserMenu } from "@/components/UserMenu"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { createBrowserClient } from "@supabase/ssr"
+import { getThumbnailUrl, getOptimizedImageUrl, isCloudinaryUrl } from "@/lib/cloudinary"
 
 interface Memory {
   id: string
@@ -205,9 +206,14 @@ export default function GalleryPage() {
                     <div className="relative overflow-hidden bg-gray-100">
                       {firstMedia ? (
                         <img
-                          src={firstMedia.url}
+                          src={
+                            isCloudinaryUrl(firstMedia.url)
+                              ? getThumbnailUrl(firstMedia.url, 400)
+                              : firstMedia.url
+                          }
                           alt={item.title}
                           className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-72 flex items-center justify-center bg-[#fef9f3]">
@@ -300,7 +306,16 @@ export default function GalleryPage() {
                 <div className="w-full h-80 overflow-hidden rounded-t-lg">
                   {selectedItem.media.length === 1 ? (
                     <img
-                      src={selectedItem.media[0].url}
+                      src={
+                        isCloudinaryUrl(selectedItem.media[0].url)
+                          ? getOptimizedImageUrl(selectedItem.media[0].url, {
+                              width: 1200,
+                              quality: 'auto:good',
+                              format: 'auto',
+                              crop: 'limit'
+                            })
+                          : selectedItem.media[0].url
+                      }
                       alt={selectedItem.title}
                       className="w-full h-full object-cover"
                     />
@@ -309,7 +324,18 @@ export default function GalleryPage() {
                       {selectedItem.media.slice(0, 4).map((media, idx) => (
                         <img
                           key={media.id}
-                          src={media.url}
+                          src={
+                            isCloudinaryUrl(media.url)
+                              ? getOptimizedImageUrl(media.url, {
+                                  width: 600,
+                                  height: 400,
+                                  quality: 'auto:good',
+                                  format: 'auto',
+                                  crop: 'fill',
+                                  gravity: 'auto'
+                                })
+                              : media.url
+                          }
                           alt={`${selectedItem.title} - ${idx + 1}`}
                           className="w-full h-full object-cover"
                         />
