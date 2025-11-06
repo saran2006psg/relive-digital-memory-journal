@@ -3,12 +3,15 @@
 import { useState } from "react"
 import { Calendar, MapPin, Image as ImageIcon, Video, X, Save, BookOpen, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { UserMenu } from "@/components/UserMenu"
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
+import { createBrowserClient } from "@supabase/ssr"
 
 const moodEmojis = [
   { emoji: "😊", label: "Happy", color: "#B5D99C" },
@@ -28,6 +31,8 @@ const moodEmojis = [
 const tagSuggestions = ["Family", "Friends", "Travel", "Work", "Love", "Adventure", "Food", "Nature"]
 
 export default function AddMemoryPage() {
+  const router = useRouter()
+  const { user, loading: authLoading } = useSupabaseAuth()
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [selectedMood, setSelectedMood] = useState<string | null>(null)
@@ -35,8 +40,11 @@ export default function AddMemoryPage() {
   const [tagInput, setTagInput] = useState("")
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [location, setLocation] = useState("")
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
+  const [uploadPreviews, setUploadPreviews] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState("")
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   const handleAddTag = (tag: string) => {
     if (tag && !tags.includes(tag)) {
@@ -52,19 +60,117 @@ export default function AddMemoryPage() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (files) {
-      const fileUrls = Array.from(files).map(file => URL.createObjectURL(file))
-      setUploadedFiles([...uploadedFiles, ...fileUrls])
+      const newFiles = Array.from(files)
+      setUploadedFiles([...uploadedFiles, ...newFiles])
+      
+      const fileUrls = newFiles.map(file => URL.createObjectURL(file))
+      setUploadPreviews([...uploadPreviews, ...fileUrls])
     }
   }
 
-  const handleSave = () => {
+  const handleRemoveFile = (index: number) => {
+    setUploadedFiles(uploadedFiles.filter((_, i) => i !== index))
+    
+    // Revoke the object URL to free memory
+    URL.revokeObjectURL(uploadPreviews[index])
+    setUploadPreviews(uploadPreviews.filter((_, i) => i !== index))
+  }
+
+  const handleSave = async () => {
+    if (!user) {
+      setError("You must be logged in to save a memory")
+      return
+    }
+
+    if (!title.trim() || !content.trim()) {
+      setError("Title and content are required")
+      return
+    }
+
     setIsSaving(true)
-    // Simulate save with animation
-    setTimeout(() => {
+    setError("")
+    setUploadProgress(0)
+
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+
+      // Get session for API calls
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        throw new Error("No active session")
+      }
+
+      // 1. Create the memory
+      const memoryResponse = await fetch('/api/memories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          content: content.trim(),
+          date,
+          location: location.trim() || null,
+          mood: selectedMood || null,
+          tags: tags
+        })
+      })
+
+      if (!memoryResponse.ok) {
+        const errorData = await memoryResponse.json()
+        throw new Error(errorData.error || 'Failed to create memory')
+      }
+
+      const { memory } = await memoryResponse.json()
+      setUploadProgress(30)
+
+      // 2. Upload files if any
+      if (uploadedFiles.length > 0) {
+        const totalFiles = uploadedFiles.length
+        
+        for (let i = 0; i < uploadedFiles.length; i++) {
+          const file = uploadedFiles[i]
+          const formData = new FormData()
+          formData.append('file', file)
+          formData.append('memoryId', memory.id)
+
+          const uploadResponse = await fetch('/api/upload', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: formData
+          })
+
+          if (!uploadResponse.ok) {
+            console.error(`Failed to upload file ${i + 1}`)
+          }
+
+          // Update progress
+          setUploadProgress(30 + ((i + 1) / totalFiles) * 60)
+        }
+      }
+
+      setUploadProgress(100)
+
+      // Success! Clean up and redirect
+      uploadPreviews.forEach(url => URL.revokeObjectURL(url))
+      
+      setTimeout(() => {
+        router.push('/gallery')
+      }, 1000)
+
+    } catch (error: any) {
+      console.error('Error saving memory:', error)
+      setError(error.message || 'Failed to save memory')
       setIsSaving(false)
-      // Reset form or redirect
-      alert("Memory saved! 🎉")
-    }, 2000)
+      setUploadProgress(0)
+    }
   }
 
   return (
@@ -283,18 +389,18 @@ export default function AddMemoryPage() {
                   </label>
 
                   {/* Uploaded Files Preview - Smaller Grid */}
-                  {uploadedFiles.length > 0 && (
+                  {uploadPreviews.length > 0 && (
                     <div className="grid grid-cols-2 gap-2 mt-3">
-                      {uploadedFiles.map((file, index) => (
+                      {uploadPreviews.map((preview, index) => (
                         <div key={index} className="relative">
                           <div className="relative aspect-square rounded-sm overflow-hidden shadow-md group">
                             <img
-                              src={file}
+                              src={preview}
                               alt={`Upload ${index + 1}`}
                               className="w-full h-full object-cover"
                             />
                             <button
-                              onClick={() => setUploadedFiles(uploadedFiles.filter((_, i) => i !== index))}
+                              onClick={() => handleRemoveFile(index)}
                               className="absolute top-1 right-1 p-0.5 bg-[#e74c3c] text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <X className="w-3 h-3" />
@@ -391,17 +497,33 @@ export default function AddMemoryPage() {
               </div>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                <p className="text-sm handwritten text-red-700">{error}</p>
+              </div>
+            )}
+
             {/* Save Button */}
             <Button
               onClick={handleSave}
-              disabled={isSaving || !title || !content}
+              disabled={isSaving || !title || !content || authLoading}
               className="w-full h-16 text-xl handwritten font-bold relative overflow-hidden"
               size="lg"
             >
               {isSaving ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Saving Memory...
+                <div className="flex flex-col items-center gap-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Saving Memory...
+                  </div>
+                  {uploadProgress > 0 && (
+                    <div className="text-xs opacity-90">
+                      {uploadProgress < 30 ? 'Creating memory...' : 
+                       uploadProgress < 90 ? 'Uploading files...' : 
+                       'Almost done!'}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center gap-2">

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { UserMenu } from "@/components/UserMenu"
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 
 const moods = [
   { emoji: "😊", label: "Happy", color: "#B5D99C", count: 12 },
