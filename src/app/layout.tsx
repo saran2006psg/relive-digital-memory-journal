@@ -3,6 +3,13 @@ import "./globals.css";
 import VisualEditsMessenger from "../visual-edits/VisualEditsMessenger";
 import ErrorReporter from "@/components/ErrorReporter";
 import Script from "next/script";
+import { Architects_Daughter } from "next/font/google";
+
+const architectsDaughter = Architects_Daughter({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-architects-daughter",
+});
 
 export const metadata: Metadata = {
   title: "ReLive - Your Personal Digital Diary",
@@ -19,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className={`${architectsDaughter.variable} antialiased`}>
         <ErrorReporter />
         <Script
           src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"

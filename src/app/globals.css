@@ -183,7 +183,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Dancing Script', cursive;
+    font-family: var(--font-architects-daughter), 'Dancing Script', cursive;
     background-color: #ffffff;
     background-image:
       linear-gradient(
@@ -231,7 +231,7 @@
   }
 
   .handwritten {
-    font-family: 'Dancing Script', cursive;
+    font-family: var(--font-architects-daughter), 'Dancing Script', cursive;
   }
 
   .notebook-line {

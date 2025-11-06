@@ -56,21 +56,12 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-            <Link href="/auth/signup">
+            <Link href="/auth/login">
               <Button 
                 size="lg" 
                 className="handwritten text-xl bg-[#88aaee] hover:bg-[#88aaee] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
-                Start Your Memory Journey
-              </Button>
-            </Link>
-            <Link href="/auth/login">
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="handwritten text-xl border-2 border-[#8b6f47] text-[#8b6f47] hover:bg-[#8b6f47]/5"
-              >
-                Sign In
+                Start Your Journey
               </Button>
             </Link>
           </div>

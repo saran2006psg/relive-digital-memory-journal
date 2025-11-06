@@ -95,37 +95,32 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#faf8f3] via-[#f5e6d3] to-[#e8d5c4] flex items-center justify-center p-4">
-      {/* Background Decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-[#ff9a8b]/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-[#b5d99c]/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-[#3498db]/10 rounded-full blur-3xl" />
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center p-4" style={{
+      backgroundColor: '#ffffff',
+      backgroundImage: `
+        linear-gradient(90deg, #ffffff 80px, #ffffff 82px, transparent 82px),
+        repeating-linear-gradient(0deg, transparent 0px, transparent 34px, rgba(99, 179, 237, 0.25) 34px, rgba(99, 179, 237, 0.25) 35px)
+      `,
+      backgroundSize: '100% 100%, 100% 35px',
+      backgroundRepeat: 'no-repeat, repeat'
+    }}>
       <div className="w-full max-w-md relative z-10">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <BookOpen className="w-10 h-10 text-[#8b6f47]" />
+        <div className="text-center mb-10">
+          <Link href="/" className="inline-flex items-center gap-3 mb-3 group">
+            <div className="p-2 bg-[#fef9f3] rounded-lg group-hover:bg-[#d4b896]/20 transition-colors">
+              <BookOpen className="w-8 h-8 text-[#8b6f47]" />
+            </div>
             <span className="text-4xl handwritten font-bold text-[#8b6f47]">ReLive</span>
           </Link>
-          <p className="text-xl handwritten text-[#7f8c8d]">Start your journey today</p>
+          <p className="text-lg handwritten text-[#7f8c8d] mt-2">Start your journey today</p>
         </div>
 
         {/* Sign Up Card */}
-        <Card className="bg-white shadow-2xl rounded-lg border-l-4 border-[#ff9a8b] p-8 relative overflow-hidden">
-          {/* Notebook styling */}
-          <div className="absolute left-16 top-0 bottom-0 w-[2px] bg-[#ff9a8b]/20" />
-          <div className="absolute inset-0 pointer-events-none opacity-5">
-            {[...Array(25)].map((_, i) => (
-              <div key={i} className="h-8 border-b border-[#a8d5e2]" />
-            ))}
-          </div>
-
+        <Card className="bg-white shadow-lg rounded-2xl border border-[#d4b896]/30 p-8 relative overflow-hidden">
           <div className="relative">
             <h1 className="text-3xl handwritten font-bold text-[#2c3e50] mb-2">Create Account</h1>
-            <p className="text-lg handwritten text-[#7f8c8d] mb-6">
+            <p className="text-base handwritten text-[#7f8c8d] mb-8">
               Begin capturing your precious moments
             </p>
 
@@ -135,21 +130,21 @@ export default function SignUpPage() {
               </div>
             )}
 
-            <form onSubmit={handleSignUp} className="space-y-5">
+            <form onSubmit={handleSignUp} className="space-y-6">
               {/* Name Input */}
               <div>
-                <Label htmlFor="name" className="handwritten text-lg text-[#2c3e50] mb-2 block">
+                <Label htmlFor="name" className="handwritten text-base text-[#2c3e50] mb-2 block">
                   Full Name
                 </Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7f8c8d]" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7f8c8d]" />
                   <Input
                     id="name"
                     type="text"
                     placeholder="John Doe"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="pl-11 h-12 handwritten text-lg border-2 border-[#d4b896] focus:border-[#ff9a8b] transition-colors"
+                    className="pl-11 h-11 handwritten text-base border border-[#d4b896] focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20 rounded-lg bg-[#fef9f3] transition-all"
                     required
                     disabled={isLoading}
                   />
@@ -158,18 +153,18 @@ export default function SignUpPage() {
 
               {/* Email Input */}
               <div>
-                <Label htmlFor="email" className="handwritten text-lg text-[#2c3e50] mb-2 block">
+                <Label htmlFor="email" className="handwritten text-base text-[#2c3e50] mb-2 block">
                   Email Address
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7f8c8d]" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7f8c8d]" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="your@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-11 h-12 handwritten text-lg border-2 border-[#d4b896] focus:border-[#ff9a8b] transition-colors"
+                    className="pl-11 h-11 handwritten text-base border border-[#d4b896] focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20 rounded-lg bg-[#fef9f3] transition-all"
                     required
                     disabled={isLoading}
                   />
@@ -178,18 +173,18 @@ export default function SignUpPage() {
 
               {/* Password Input */}
               <div>
-                <Label htmlFor="password" className="handwritten text-lg text-[#2c3e50] mb-2 block">
+                <Label htmlFor="password" className="handwritten text-base text-[#2c3e50] mb-2 block">
                   Password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7f8c8d]" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7f8c8d]" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-11 pr-11 h-12 handwritten text-lg border-2 border-[#d4b896] focus:border-[#ff9a8b] transition-colors"
+                    className="pl-11 pr-11 h-11 handwritten text-base border border-[#d4b896] focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20 rounded-lg bg-[#fef9f3] transition-all"
                     required
                     disabled={isLoading}
                     minLength={8}
@@ -197,7 +192,7 @@ export default function SignUpPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7f8c8d] hover:text-[#ff9a8b] transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7f8c8d] hover:text-[#3498db] transition-colors"
                     disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -207,25 +202,25 @@ export default function SignUpPage() {
 
               {/* Confirm Password Input */}
               <div>
-                <Label htmlFor="confirmPassword" className="handwritten text-lg text-[#2c3e50] mb-2 block">
+                <Label htmlFor="confirmPassword" className="handwritten text-base text-[#2c3e50] mb-2 block">
                   Confirm Password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7f8c8d]" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7f8c8d]" />
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-11 pr-11 h-12 handwritten text-lg border-2 border-[#d4b896] focus:border-[#ff9a8b] transition-colors"
+                    className="pl-11 pr-11 h-11 handwritten text-base border border-[#d4b896] focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20 rounded-lg bg-[#fef9f3] transition-all"
                     required
                     disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7f8c8d] hover:text-[#ff9a8b] transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7f8c8d] hover:text-[#3498db] transition-colors"
                     disabled={isLoading}
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -236,7 +231,7 @@ export default function SignUpPage() {
               {/* Sign Up Button */}
               <Button
                 type="submit"
-                className="w-full h-12 text-lg handwritten bg-[#ff9a8b] hover:bg-[#ff8a7a] transition-colors"
+                className="w-full h-12 text-base handwritten bg-[#ff9a8b] hover:bg-[#ff8a7a] text-white rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -251,9 +246,9 @@ export default function SignUpPage() {
             </form>
 
             {/* Divider */}
-            <div className="relative my-6">
+            <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#d4b896]"></div>
+                <div className="w-full border-t border-[#d4b896]/30"></div>
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-4 bg-white handwritten text-[#7f8c8d]">or</span>
@@ -261,25 +256,28 @@ export default function SignUpPage() {
             </div>
 
             {/* Sign In Link */}
-            <p className="text-center handwritten text-lg text-[#7f8c8d]">
-              Already have an account?{" "}
-              <Link
-                href="/auth/login"
-                className="text-[#ff9a8b] hover:text-[#ff8a7a] font-semibold transition-colors"
-              >
-                Sign in
-              </Link>
-            </p>
+            <div className="text-center">
+              <p className="handwritten text-base text-[#7f8c8d]">
+                Already have an account?{" "}
+                <Link
+                  href="/auth/login"
+                  className="text-[#ff9a8b] hover:text-[#ff8a7a] font-semibold transition-colors hover:underline"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </div>
           </div>
         </Card>
 
         {/* Back to Home */}
-        <div className="text-center mt-6">
+        <div className="text-center mt-8">
           <Link
             href="/"
-            className="handwritten text-lg text-[#7f8c8d] hover:text-[#8b6f47] transition-colors"
+            className="inline-flex items-center gap-2 handwritten text-base text-[#7f8c8d] hover:text-[#8b6f47] transition-colors"
           >
-            ← Back to Home
+            <span>←</span>
+            <span>Back to Home</span>
           </Link>
         </div>
       </div>
