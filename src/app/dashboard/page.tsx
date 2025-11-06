@@ -64,13 +64,6 @@ const dashboardSections: {
     color: "#ff9a8b",
     icon: Heart,
   },
-  {
-    id: "upcoming-reminders",
-    label: "Upcoming Reminders",
-    description: "Never miss the moments you want to celebrate next.",
-    color: "#8dd3c7",
-    icon: Clock,
-  },
 ]
 
 const adjustColor = (hex: string, percent: number) => {
@@ -284,41 +277,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Reminders */}
-            <div
-              id="upcoming-reminders"
-              className={`scroll-mt-36 transition-all duration-700 delay-300 ${
-                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
-            >
-              <h2 className="text-3xl handwritten font-bold mb-4 text-[#8b6f47]">
-                Upcoming Reminders
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {reminders.map((reminder, index) => (
-                  <div key={reminder.id} className="relative">
-                    <div
-                      className="bg-[#fef9f3] shadow-lg rounded-r-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-l-4 relative overflow-hidden"
-                      style={{ borderLeftColor: '#d4a574' }}
-                    >
-                      <div className="absolute left-12 top-0 bottom-0 w-0.5 bg-[#d4a574]/20" />
-                      <div className="absolute inset-0 pointer-events-none opacity-10">
-                        {[...Array(6)].map((_, i) => (
-                          <div key={i} className="h-6 border-b border-[#a8d5e2]" />
-                        ))}
-                      </div>
-                      
-                      <div className="relative pl-8">
-                        <h3 className="text-xl handwritten font-bold text-[#2c3e50] mb-2">{reminder.title}</h3>
-                        <p className="text-lg handwritten font-semibold text-[#d4a574]">
-                          {reminder.date}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Right Column - Mood Tracker */}

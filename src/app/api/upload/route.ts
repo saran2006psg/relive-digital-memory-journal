@@ -66,10 +66,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/quicktime']
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 
+      'video/mp4', 'video/quicktime', 'video/webm',
+      'audio/webm', 'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg'
+    ]
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Allowed: JPEG, PNG, GIF, WebP, MP4' },
+        { error: 'Invalid file type. Allowed: Images, Videos, and Audio files' },
         { status: 400 }
       )
     }
@@ -81,7 +85,12 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes)
 
     // Determine resource type
-    const resourceType = file.type.startsWith('video/') ? 'video' : 'image'
+    let resourceType: 'image' | 'video' | 'auto' = 'image'
+    if (file.type.startsWith('video/')) {
+      resourceType = 'video'
+    } else if (file.type.startsWith('audio/')) {
+      resourceType = 'video' // Cloudinary handles audio as 'video' resource type
+    }
     
     // Generate unique public_id
     const timestamp = Date.now()
@@ -137,12 +146,21 @@ export async function POST(request: NextRequest) {
 
     // Save to database
     if (memoryId) {
+      // Determine media_type for database
+      let mediaType = 'image'
+      if (file.type.startsWith('video/')) {
+        mediaType = 'video'
+      } else if (file.type.startsWith('audio/')) {
+        mediaType = 'audio'
+      }
+
       const { data: media, error: mediaError } = await supabase
         .from('media')
         .insert({
           memory_id: memoryId,
           url: secureUrl,
           type: resourceType,
+          media_type: mediaType,
           thumbnail_url: thumbnailUrl,
           cloudinary_id: cloudinaryResult.public_id,
           cloudinary_url: secureUrl,

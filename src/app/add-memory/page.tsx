@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Calendar, MapPin, Image as ImageIcon, Video, X, Save, BookOpen, ArrowLeft, Maximize2 } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import { Calendar, MapPin, Image as ImageIcon, Video, X, Save, BookOpen, ArrowLeft, Maximize2, Mic, MicOff } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -47,6 +47,17 @@ export default function AddMemoryPage() {
   const [error, setError] = useState("")
   const [uploadProgress, setUploadProgress] = useState(0)
   const [expandedImageIndex, setExpandedImageIndex] = useState<number | null>(null)
+  const [isRecording, setIsRecording] = useState(false)
+  const recognitionRef = useRef<any>(null)
+  
+  // Audio recording states
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false)
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
+  const [audioURL, setAudioURL] = useState<string | null>(null)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleAddTag = (tag: string) => {
     if (tag && !tags.includes(tag)) {
@@ -76,6 +87,132 @@ export default function AddMemoryPage() {
     // Revoke the object URL to free memory
     URL.revokeObjectURL(uploadPreviews[index])
     setUploadPreviews(uploadPreviews.filter((_, i) => i !== index))
+  }
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition()
+        recognitionRef.current.continuous = true
+        recognitionRef.current.interimResults = true
+        recognitionRef.current.lang = 'en-US'
+
+        recognitionRef.current.onresult = (event: any) => {
+          let interimTranscript = ''
+          let finalTranscript = ''
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript + ' '
+            } else {
+              interimTranscript += transcript
+            }
+          }
+
+          if (finalTranscript) {
+            setContent((prev) => prev + finalTranscript)
+          }
+        }
+
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error)
+          setIsRecording(false)
+        }
+
+        recognitionRef.current.onend = () => {
+          setIsRecording(false)
+        }
+      }
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+    }
+  }, [])
+
+  const toggleVoiceRecording = () => {
+    if (!recognitionRef.current) {
+      alert('Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.')
+      return
+    }
+
+    if (isRecording) {
+      recognitionRef.current.stop()
+      setIsRecording(false)
+    } else {
+      recognitionRef.current.start()
+      setIsRecording(true)
+    }
+  }
+
+  // Audio recording functions
+  const startAudioRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream)
+      mediaRecorderRef.current = mediaRecorder
+      audioChunksRef.current = []
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        setAudioBlob(audioBlob)
+        const url = URL.createObjectURL(audioBlob)
+        setAudioURL(url)
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop())
+      }
+
+      mediaRecorder.start()
+      setIsRecordingAudio(true)
+      setRecordingTime(0)
+
+      // Start timer
+      timerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1)
+      }, 1000)
+    } catch (error) {
+      console.error('Error accessing microphone:', error)
+      alert('Could not access microphone. Please check your permissions.')
+    }
+  }
+
+  const stopAudioRecording = () => {
+    if (mediaRecorderRef.current && isRecordingAudio) {
+      mediaRecorderRef.current.stop()
+      setIsRecordingAudio(false)
+      
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }
+  }
+
+  const deleteAudioRecording = () => {
+    if (audioURL) {
+      URL.revokeObjectURL(audioURL)
+    }
+    setAudioBlob(null)
+    setAudioURL(null)
+    setRecordingTime(0)
+  }
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   const handleSave = async () => {
@@ -131,10 +268,13 @@ export default function AddMemoryPage() {
       const { memory } = await memoryResponse.json()
       setUploadProgress(30)
 
-      // 2. Upload files if any
+      // 2. Upload files if any (photos/videos)
+      let totalUploads = uploadedFiles.length
+      if (audioBlob) totalUploads += 1
+
+      let uploadedCount = 0
+
       if (uploadedFiles.length > 0) {
-        const totalFiles = uploadedFiles.length
-        
         for (let i = 0; i < uploadedFiles.length; i++) {
           const file = uploadedFiles[i]
           const formData = new FormData()
@@ -153,9 +293,32 @@ export default function AddMemoryPage() {
             console.error(`Failed to upload file ${i + 1}`)
           }
 
-          // Update progress
-          setUploadProgress(30 + ((i + 1) / totalFiles) * 60)
+          uploadedCount++
+          setUploadProgress(30 + (uploadedCount / totalUploads) * 60)
         }
+      }
+
+      // 3. Upload audio if any
+      if (audioBlob) {
+        const audioFile = new File([audioBlob], `audio-${Date.now()}.webm`, { type: 'audio/webm' })
+        const formData = new FormData()
+        formData.append('file', audioFile)
+        formData.append('memoryId', memory.id)
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: formData
+        })
+
+        if (!uploadResponse.ok) {
+          console.error('Failed to upload audio')
+        }
+
+        uploadedCount++
+        setUploadProgress(30 + (uploadedCount / totalUploads) * 60)
       }
 
       setUploadProgress(100)
@@ -397,6 +560,72 @@ export default function AddMemoryPage() {
                 </>
               )}
             </div>
+
+            {/* Audio Recording */}
+            <div className="bg-white shadow-sm rounded-xl border border-[#b5d99c]/30 p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg handwritten font-bold mb-2 text-[#2c3e50]">Audio Recording</h3>
+              
+              {!audioURL ? (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={isRecordingAudio ? stopAudioRecording : startAudioRecording}
+                    className={`w-full flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-4 sm:p-6 transition-all duration-200 ${
+                      isRecordingAudio 
+                        ? 'border-red-500 bg-red-50 animate-pulse' 
+                        : 'border-[#d4b896] hover:border-[#3498db] hover:bg-[#fef9f3] cursor-pointer'
+                    }`}
+                  >
+                    {isRecordingAudio ? (
+                      <>
+                        <div className="relative">
+                          <Mic className="w-8 h-8 text-red-500 animate-pulse" />
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
+                        </div>
+                        <p className="text-sm handwritten text-red-600 font-bold mt-2">
+                          Recording... {formatTime(recordingTime)}
+                        </p>
+                        <p className="text-xs handwritten text-red-500/70 mt-1">
+                          Click to stop
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="w-8 h-8 text-[#7f8c8d] mb-2" />
+                        <p className="text-xs sm:text-sm handwritten text-[#7f8c8d] text-center font-medium">
+                          Click to record audio
+                        </p>
+                        <p className="text-xs handwritten text-[#7f8c8d]/70 text-center mt-0.5">
+                          Share your voice with your memory
+                        </p>
+                      </>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="bg-[#fef9f3] border border-[#d4b896]/30 rounded-xl p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-[#3498db]/10 rounded-full flex items-center justify-center">
+                        <Mic className="w-5 h-5 text-[#3498db]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm handwritten font-semibold text-[#2c3e50]">Audio Recording</p>
+                        <p className="text-xs handwritten text-[#7f8c8d]">{formatTime(recordingTime)}</p>
+                      </div>
+                      <button
+                        onClick={deleteAudioRecording}
+                        className="flex-shrink-0 p-1.5 bg-[#e74c3c] text-white rounded-full hover:bg-[#c0392b] transition-all hover:scale-110 shadow-sm"
+                        title="Delete recording"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <audio src={audioURL} controls className="w-full mt-3 h-8" />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Column - Text Editor (Larger - 3 cols) */}
@@ -449,16 +678,48 @@ export default function AddMemoryPage() {
 
                 {/* Content Textarea */}
                 <div className="space-y-2">
-                  <Label htmlFor="content" className="text-base sm:text-lg handwritten font-semibold text-[#2c3e50]">
-                    Your Story
-                  </Label>
-                  <Textarea
-                    id="content"
-                    placeholder="Pour your heart out... What happened? How did you feel?"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    className="min-h-[300px] sm:min-h-[400px] resize-none bg-[#fef9f3] border-2 border-[#d4b896] text-base sm:text-lg handwritten leading-relaxed text-[#2c3e50] rounded-xl px-3 sm:px-4 py-3 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20"
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="content" className="text-base sm:text-lg handwritten font-semibold text-[#2c3e50]">
+                      Your Story
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={toggleVoiceRecording}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
+                        isRecording 
+                          ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
+                          : 'bg-[#3498db] hover:bg-[#2980b9] text-white'
+                      }`}
+                      title={isRecording ? 'Stop recording' : 'Start voice recording'}
+                    >
+                      {isRecording ? (
+                        <>
+                          <MicOff className="w-4 h-4" />
+                          <span className="text-xs sm:text-sm handwritten">Recording...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="w-4 h-4" />
+                          <span className="text-xs sm:text-sm handwritten">Voice</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Textarea
+                      id="content"
+                      placeholder="Pour your heart out... What happened? How did you feel? (Or click the mic button to speak)"
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      className="min-h-[300px] sm:min-h-[400px] resize-none bg-[#fef9f3] border-2 border-[#d4b896] text-base sm:text-lg handwritten leading-relaxed text-[#2c3e50] rounded-xl px-3 sm:px-4 py-3 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20"
+                    />
+                    {isRecording && (
+                      <div className="absolute bottom-3 right-3 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                        <span className="text-xs handwritten">Listening...</span>
+                      </div>
+                    )}
+                  </div>
                   <p className="text-xs sm:text-sm handwritten text-[#7f8c8d]">
                     {content.length} characters
                   </p>
@@ -477,7 +738,7 @@ export default function AddMemoryPage() {
             <Button
               onClick={handleSave}
               disabled={isSaving || !title || !content || authLoading}
-              className="w-full h-12 sm:h-16 text-lg sm:text-xl handwritten font-bold relative overflow-hidden rounded-xl bg-gradient-to-r from-[#8b6f47] to-[#d4a574] hover:from-[#6d5638] hover:to-[#b8895d] shadow-lg hover:shadow-xl transition-all"
+              className="w-full h-12 sm:h-16 text-lg sm:text-xl handwritten font-bold relative overflow-hidden rounded-xl bg-gradient-to-r from-[#8b6f47] to-[#d4a574] hover:from-[#6d5638] hover:to-[#b8895d] shadow-lg hover:shadow-xl transition-all mt-6"
               size="lg"
             >
               {isSaving ? (
