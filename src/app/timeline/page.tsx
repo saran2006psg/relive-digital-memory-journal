@@ -776,11 +776,11 @@ function TimelineContent() {
                 </div>
               </div>
 
-              {/* Middle Row: Images Left, Audio Right */}
-              <div className="grid grid-cols-3 gap-4 mb-4">
+              {/* Middle Row: Images Left, Audio Right (conditionally) */}
+              <div className={`grid gap-4 mb-4 ${selectedMemory.media && selectedMemory.media.filter(m => isAudioMedia(m)).length > 0 ? 'grid-cols-3' : 'grid-cols-1'}`}>
                 
-                {/* Left: Images (2 columns width) */}
-                <div className="col-span-2 bg-white rounded-xl shadow-md overflow-hidden border-2 border-[#d4b896]/30">
+                {/* Left: Images (2 columns width if audio exists, full width otherwise) */}
+                <div className={`${selectedMemory.media && selectedMemory.media.filter(m => isAudioMedia(m)).length > 0 ? 'col-span-2' : 'col-span-1'} bg-white rounded-xl shadow-md overflow-hidden border-2 border-[#d4b896]/30`}>
                   {selectedMemory.media && selectedMemory.media.filter(m => !isAudioMedia(m)).length > 0 ? (
                     <div className="p-3">
                       {selectedMemory.media.filter(m => !isAudioMedia(m)).length === 1 ? (
@@ -853,39 +853,30 @@ function TimelineContent() {
                   )}
                 </div>
 
-                {/* Right: Audio (1 column width) */}
-                <div className="bg-white rounded-xl shadow-md border-2 border-[#d4b896]/30 overflow-hidden flex flex-col">
-                  {selectedMemory.media && selectedMemory.media.filter(m => isAudioMedia(m)).length > 0 ? (
-                    <>
-                      <div className="bg-linear-to-r from-[#8b6f47]/10 to-transparent px-4 py-3 border-b border-[#d4b896]/20">
-                        <div className="flex items-center gap-2">
-                          <Mic className="w-4 h-4 text-[#8b6f47]" />
-                          <h3 className="text-sm handwritten font-bold text-[#8b6f47]">audio</h3>
-                        </div>
-                      </div>
-                      <div className="p-4 flex-1 flex flex-col justify-center">
-                        {selectedMemory.media.filter(m => isAudioMedia(m)).map((audio) => (
-                          <div key={audio.id} className="w-full">
-                            <audio 
-                              src={audio.url} 
-                              controls 
-                              preload="metadata"
-                              className="w-full" 
-                              style={{ height: '40px', maxHeight: '40px' }} 
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex items-center justify-center h-full min-h-[200px] py-8">
-                      <div className="text-center">
-                        <Mic className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                        <p className="text-xs handwritten text-gray-400">No audio</p>
+                {/* Right: Audio (1 column width) - Only show if audio exists */}
+                {selectedMemory.media && selectedMemory.media.filter(m => isAudioMedia(m)).length > 0 && (
+                  <div className="bg-white rounded-xl shadow-md border-2 border-[#d4b896]/30 overflow-hidden flex flex-col">
+                    <div className="bg-linear-to-r from-[#8b6f47]/10 to-transparent px-4 py-3 border-b border-[#d4b896]/20">
+                      <div className="flex items-center gap-2">
+                        <Mic className="w-4 h-4 text-[#8b6f47]" />
+                        <h3 className="text-sm handwritten font-bold text-[#8b6f47]">audio</h3>
                       </div>
                     </div>
-                  )}
-                </div>
+                    <div className="p-4 flex-1 flex flex-col justify-center">
+                      {selectedMemory.media.filter(m => isAudioMedia(m)).map((audio) => (
+                        <div key={audio.id} className="w-full">
+                          <audio 
+                            src={audio.url} 
+                            controls 
+                            preload="metadata"
+                            className="w-full" 
+                            style={{ height: '40px', maxHeight: '40px' }} 
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Bottom Row: Your Story (Full Width) */}
