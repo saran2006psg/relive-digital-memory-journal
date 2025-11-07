@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, Suspense } from "react"
 import { BookOpen, Calendar, MapPin, Tag, Clock, Heart, Sparkles, X, Mic, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -48,7 +48,7 @@ const moodColors: Record<string, string> = {
   "🤗": "#B8E8D4",
 }
 
-export default function TimelinePage() {
+function TimelineContent() {
   const { user, loading: authLoading } = useSupabaseAuth()
   const searchParams = useSearchParams()
   const highlightId = searchParams.get('highlight')
@@ -891,5 +891,17 @@ export default function TimelinePage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function TimelinePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8b6f47]"></div>
+      </div>
+    }>
+      <TimelineContent />
+    </Suspense>
   )
 }
