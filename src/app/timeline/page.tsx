@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { BookOpen, Calendar, MapPin, Tag, Clock, Heart, Sparkles, X, Mic, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { UserMenu } from "@/components/UserMenu"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { createBrowserClient } from "@supabase/ssr"
@@ -49,6 +50,10 @@ const moodColors: Record<string, string> = {
 
 export default function TimelinePage() {
   const { user, loading: authLoading } = useSupabaseAuth()
+  const searchParams = useSearchParams()
+  const highlightId = searchParams.get('highlight')
+  const memoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+  
   const [memories, setMemories] = useState<GroupedMemory[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -74,6 +79,30 @@ export default function TimelinePage() {
       setLoading(false)
     }
   }, [user, authLoading])
+
+  // Handle highlighting memory from URL parameter
+  useEffect(() => {
+    if (highlightId && memories.length > 0 && !loading) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        const memory = memories.find(m => m.id === highlightId)
+        if (memory) {
+          // Open the memory modal
+          setSelectedMemory(memory)
+          
+          // Scroll to the memory card
+          const element = memoryRefs.current[highlightId]
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            // Add a highlight effect
+            element.style.animation = 'pulse 2s ease-in-out'
+          }
+        }
+      }, 500)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [highlightId, memories, loading])
 
   const fetchMemories = async () => {
     try {
@@ -474,6 +503,7 @@ export default function TimelinePage() {
                     {/* Memory Card - Classical Postcard Design */}
                     <div className={`relative md:w-[calc(50%-3.5rem)] ${isLeft ? 'md:mr-auto md:pr-8' : 'md:ml-auto md:pl-8'} ml-24 md:ml-0`}>
                       <div
+                        ref={(el) => { memoryRefs.current[memory.id] = el }}
                         className="bg-white rounded-lg shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden cursor-pointer group relative border-4 border-[#fef9f3] transform hover:-translate-y-1 hover:rotate-1"
                         onClick={() => setSelectedMemory(memory)}
                         style={{
@@ -506,7 +536,7 @@ export default function TimelinePage() {
                             />
                             
                             {/* Vintage overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/5 pointer-events-none" />
+                            <div className="absolute inset-0 bg-linear-to-br from-transparent via-transparent to-black/5 pointer-events-none" />
                           </div>
                           
                           {/* Audio Icon - Vintage Stamp Style */}
@@ -529,7 +559,7 @@ export default function TimelinePage() {
                         </div>
 
                         {/* Content Section - Journal Entry Style */}
-                        <div className="p-5 bg-gradient-to-b from-white to-[#fef9f3]/30">
+                        <div className="p-5 bg-linear-to-b from-white to-[#fef9f3]/30">
                           {/* Date Badge - Vintage Ticket Style */}
                           <div className="inline-flex items-center gap-2 bg-[#d4a574]/10 border border-[#d4a574] px-3 py-1.5 mb-3 shadow-sm"
                             style={{

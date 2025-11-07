@@ -46,6 +46,8 @@ export default function AddMemoryPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [savingStep, setSavingStep] = useState("")
+  const [completedSteps, setCompletedSteps] = useState<string[]>([])
   const [expandedImageIndex, setExpandedImageIndex] = useState<number | null>(null)
   const [isRecording, setIsRecording] = useState(false)
   const recognitionRef = useRef<any>(null)
@@ -229,6 +231,8 @@ export default function AddMemoryPage() {
     setIsSaving(true)
     setError("")
     setUploadProgress(0)
+    setSavingStep("")
+    setCompletedSteps([])
 
     try {
       const supabase = createBrowserClient(
@@ -237,13 +241,19 @@ export default function AddMemoryPage() {
       )
 
       // Get session for API calls
+      setSavingStep("Verifying session...")
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session) {
         throw new Error("No active session")
       }
+      
+      await new Promise(resolve => setTimeout(resolve, 300))
+      setCompletedSteps(prev => [...prev, "Session verified ✓"])
+      setUploadProgress(10)
 
       // 1. Create the memory
+      setSavingStep("Creating memory in database...")
       const memoryResponse = await fetch('/api/memories', {
         method: 'POST',
         headers: {
@@ -266,6 +276,8 @@ export default function AddMemoryPage() {
       }
 
       const { memory } = await memoryResponse.json()
+      await new Promise(resolve => setTimeout(resolve, 300))
+      setCompletedSteps(prev => [...prev, "Memory created ✓"])
       setUploadProgress(30)
 
       // 2. Upload files if any (photos/videos)
@@ -275,12 +287,16 @@ export default function AddMemoryPage() {
       let uploadedCount = 0
 
       if (uploadedFiles.length > 0) {
+        setSavingStep(`Uploading media files (0/${uploadedFiles.length})...`)
+        
         for (let i = 0; i < uploadedFiles.length; i++) {
           const file = uploadedFiles[i]
           const formData = new FormData()
           formData.append('file', file)
           formData.append('memoryId', memory.id)
 
+          setSavingStep(`Uploading media files (${i + 1}/${uploadedFiles.length})...`)
+          
           const uploadResponse = await fetch('/api/upload', {
             method: 'POST',
             headers: {
@@ -294,12 +310,15 @@ export default function AddMemoryPage() {
           }
 
           uploadedCount++
-          setUploadProgress(30 + (uploadedCount / totalUploads) * 60)
+          setUploadProgress(30 + (uploadedCount / totalUploads) * 50)
         }
+        
+        setCompletedSteps(prev => [...prev, `${uploadedFiles.length} media file(s) uploaded ✓`])
       }
 
       // 3. Upload audio if any
       if (audioBlob) {
+        setSavingStep("Uploading audio recording...")
         const audioFile = new File([audioBlob], `audio-${Date.now()}.webm`, { type: 'audio/webm' })
         const formData = new FormData()
         formData.append('file', audioFile)
@@ -318,23 +337,30 @@ export default function AddMemoryPage() {
         }
 
         uploadedCount++
-        setUploadProgress(30 + (uploadedCount / totalUploads) * 60)
+        setUploadProgress(30 + (uploadedCount / totalUploads) * 50)
+        setCompletedSteps(prev => [...prev, "Audio recording uploaded ✓"])
       }
 
+      // Final step
+      setSavingStep("Finalizing...")
+      await new Promise(resolve => setTimeout(resolve, 300))
       setUploadProgress(100)
+      setCompletedSteps(prev => [...prev, "Memory saved successfully! ✓"])
 
       // Success! Clean up and redirect
       uploadPreviews.forEach(url => URL.revokeObjectURL(url))
       
       setTimeout(() => {
         router.push('/gallery')
-      }, 1000)
+      }, 1500)
 
     } catch (error: any) {
       console.error('Error saving memory:', error)
       setError(error.message || 'Failed to save memory')
       setIsSaving(false)
       setUploadProgress(0)
+      setSavingStep("")
+      setCompletedSteps([])
     }
   }
 
@@ -766,12 +792,46 @@ export default function AddMemoryPage() {
         </div>
       </div>
 
-      {/* Page Turn Animation Overlay */}
+      {/* Simplified Terminal-Style Loading Overlay */}
       {isSaving && (
-        <div className="fixed inset-0 bg-[#f5e6d3]/80 backdrop-blur-sm z-50 flex items-center justify-center pointer-events-none">
-          <div className="relative w-64 h-80">
-            <div className="absolute inset-0 bg-white rounded-lg shadow-2xl animate-page-turn origin-left border-l-4 border-[#3498db]" />
-            <div className="absolute inset-0 bg-[#3498db]/10 rounded-lg shadow-2xl animate-page-turn-back origin-left delay-500" />
+        <div className="fixed inset-0 bg-[#faf5ed] z-50 flex items-center justify-center font-mono">
+          <div className="max-w-3xl w-full mx-4 space-y-3">
+            
+            {/* Progress percentage */}
+            <div className="text-right mb-12">
+              <span className="text-[#3d2f1f] text-6xl font-bold handwritten">
+                ( {uploadProgress}% )
+              </span>
+            </div>
+
+            {/* Completed steps - scrolling text effect */}
+            <div className="space-y-3">
+              {completedSteps.map((step, index) => (
+                <div 
+                  key={index}
+                  className="text-[#2d3748] text-2xl handwritten animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  // {step}
+                </div>
+              ))}
+            </div>
+
+            {/* Current step - no background, just text */}
+            {savingStep && (
+              <div className="text-[#3d2f1f] text-3xl handwritten py-4 animate-pulse border-l-4 border-[#3d2f1f] pl-5">
+                // {savingStep}
+              </div>
+            )}
+
+            {/* Waiting message at the bottom right */}
+            {uploadProgress < 100 && (
+              <div className="text-right mt-16 text-[#3d2f1f] text-base handwritten animate-pulse">
+                // HANG TIGHT, EXPLORER. THE DATA TRANSFER IS IN PROGRESS. 
+                IT MIGHT TAKE A MOMENT, BUT THE JOURNEY AHEAD IS WORTH THE WAIT...📸
+              </div>
+            )}
+
           </div>
         </div>
       )}

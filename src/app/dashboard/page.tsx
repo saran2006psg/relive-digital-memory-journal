@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import type { LucideIcon } from "lucide-react"
 import { Calendar, Clock, Heart, BookOpen, Plus, Sparkles } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
@@ -48,6 +49,7 @@ const adjustColor = (hex: string, percent: number) => {
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useSupabaseAuth()
+  const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [currentHour, setCurrentHour] = useState(new Date().getHours())
   const [activeSection, setActiveSection] = useState<string>(dashboardSections[0].id)
@@ -513,7 +515,10 @@ export default function DashboardPage() {
                     
                     return (
                       <div key={memory.id} className="relative">
-                        <div className="bg-[#faf5ed] shadow-lg rounded-r-lg border-l-4 border-[#d4a574] overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+                        <div 
+                          onClick={() => router.push(`/timeline?highlight=${memory.id}`)}
+                          className="bg-[#faf5ed] shadow-lg rounded-r-lg border-l-4 border-[#d4a574] overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                        >
                           <div className="flex flex-col md:flex-row">
                             {firstImage && (
                               <div className="md:w-1/3 h-48 md:h-auto relative overflow-hidden">
@@ -535,9 +540,11 @@ export default function DashboardPage() {
                               <div className="relative pl-12">
                                 <div className="text-base handwritten text-[#7f8c8d] mb-2">{formattedDate}</div>
                                 <h3 className="text-2xl handwritten font-bold mb-3 text-[#2c3e50]">{memory.title}</h3>
-                                {memory.story && (
-                                  <p className="text-lg handwritten text-[#34495e] leading-relaxed line-clamp-3">
-                                    {memory.story}
+                                {memory.content && (
+                                  <p className="text-base handwritten text-[#34495e] leading-relaxed">
+                                    {memory.content.length > 150 
+                                      ? `${memory.content.substring(0, 150)}...` 
+                                      : memory.content}
                                   </p>
                                 )}
                               </div>

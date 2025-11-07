@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { BookOpen, X, Calendar, MapPin, Maximize2, Tag, Mic, ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
+import { BookOpen, X, Calendar, MapPin, Maximize2, Tag, Mic, ChevronLeft, ChevronRight, Trash2, Edit2, Save } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
@@ -51,6 +51,15 @@ export default function GalleryPage() {
   const [mounted, setMounted] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [editForm, setEditForm] = useState({
+    title: "",
+    content: "",
+    date: "",
+    location: "",
+    mood: ""
+  })
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -123,6 +132,8 @@ export default function GalleryPage() {
     if (!selectedItem) return
 
     setIsDeleting(true)
+    setError("")
+    
     try {
       const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -137,16 +148,24 @@ export default function GalleryPage() {
         return
       }
 
+      console.log('Deleting memory:', selectedItem.id)
+
       const response = await fetch(`/api/memories/${selectedItem.id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
         }
       })
 
+      const result = await response.json()
+      
       if (!response.ok) {
-        throw new Error('Failed to delete memory')
+        console.error('Delete failed:', result)
+        throw new Error(result.error || 'Failed to delete memory')
       }
+
+      console.log('Delete successful:', result)
 
       // Remove from local state
       setMemories(prev => prev.filter(m => m.id !== selectedItem.id))
@@ -157,7 +176,8 @@ export default function GalleryPage() {
       setIsDeleting(false)
 
       // Adjust current page if needed
-      const totalPages = Math.ceil((memories.length - 1) / memoriesPerPage)
+      const remainingMemories = memories.length - 1
+      const totalPages = Math.ceil(remainingMemories / memoriesPerPage)
       if (currentPage > totalPages && totalPages > 0) {
         setCurrentPage(totalPages)
       }
@@ -166,6 +186,87 @@ export default function GalleryPage() {
       console.error('Error deleting memory:', error)
       setError(error.message || 'Failed to delete memory')
       setIsDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }
+
+  const handleEdit = () => {
+    if (!selectedItem) return
+    
+    setEditForm({
+      title: selectedItem.title,
+      content: selectedItem.content,
+      date: selectedItem.date,
+      location: selectedItem.location || "",
+      mood: selectedItem.mood || ""
+    })
+    setIsEditing(true)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setEditForm({
+      title: "",
+      content: "",
+      date: "",
+      location: "",
+      mood: ""
+    })
+  }
+
+  const handleSaveEdit = async () => {
+    if (!selectedItem) return
+
+    setIsSaving(true)
+    setError("")
+    
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        setError("Please log in to edit memories")
+        setIsSaving(false)
+        return
+      }
+
+      const response = await fetch(`/api/memories/${selectedItem.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(editForm)
+      })
+
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update memory')
+      }
+
+      // Update local state
+      setMemories(prev => prev.map(m => 
+        m.id === selectedItem.id 
+          ? { ...m, ...editForm }
+          : m
+      ))
+      
+      // Update selected item
+      setSelectedItem(prev => prev ? { ...prev, ...editForm } : null)
+      
+      // Close edit mode
+      setIsEditing(false)
+      setIsSaving(false)
+
+    } catch (error: any) {
+      console.error('Error updating memory:', error)
+      setError(error.message || 'Failed to update memory')
+      setIsSaving(false)
     }
   }
 
@@ -433,24 +534,160 @@ export default function GalleryPage() {
           <div className="relative w-full min-h-screen">
             {/* Close Button */}
             <button
-              onClick={() => setSelectedItem(null)}
+              onClick={() => {
+                setSelectedItem(null)
+                setIsEditing(false)
+              }}
               className="fixed top-4 right-4 z-50 w-10 h-10 bg-white hover:bg-red-50 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 border-2 border-red-300"
             >
               <X className="w-5 h-5 text-red-500" />
             </button>
 
+            {/* Edit Button */}
+            {!isEditing && (
+              <button
+                onClick={handleEdit}
+                className="fixed top-4 right-28 z-50 w-10 h-10 bg-white hover:bg-blue-50 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 border-2 border-blue-300"
+                title="Edit memory"
+              >
+                <Edit2 className="w-5 h-5 text-blue-500" />
+              </button>
+            )}
+
             {/* Delete Button */}
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="fixed top-4 right-16 z-50 w-10 h-10 bg-white hover:bg-red-50 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 border-2 border-red-300"
-              title="Delete memory"
-            >
-              <Trash2 className="w-5 h-5 text-red-500" />
-            </button>
+            {!isEditing && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="fixed top-4 right-16 z-50 w-10 h-10 bg-white hover:bg-red-50 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 border-2 border-red-300"
+                title="Delete memory"
+              >
+                <Trash2 className="w-5 h-5 text-red-500" />
+              </button>
+            )}
 
             {/* Content Container - Grid Layout */}
             <div className="w-full max-w-6xl mx-auto px-6 py-8 overflow-y-auto max-h-screen">
               
+              {isEditing ? (
+                /* Edit Mode */
+                <div className="space-y-4">
+                  {/* Edit Form Header */}
+                  <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-6">
+                    <h3 className="text-xl handwritten font-bold text-blue-700 mb-1">Edit Memory</h3>
+                    <p className="text-sm handwritten text-blue-600">Update your memory details below</p>
+                  </div>
+
+                  {/* Title Field */}
+                  <div className="bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
+                    <label className="block text-sm handwritten font-bold text-[#8b6f47] mb-2">
+                      Title
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.title}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                      className="w-full px-4 py-3 border-2 border-[#d4b896] rounded-lg handwritten text-lg focus:border-[#8b6f47] focus:outline-none transition-colors"
+                      placeholder="Memory title..."
+                    />
+                  </div>
+
+                  {/* Date and Location Row */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
+                      <label className="block text-sm handwritten font-bold text-[#8b6f47] mb-2">
+                        Date
+                      </label>
+                      <input
+                        type="date"
+                        value={editForm.date}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, date: e.target.value }))}
+                        className="w-full px-4 py-3 border-2 border-[#d4b896] rounded-lg handwritten focus:border-[#8b6f47] focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
+                      <label className="block text-sm handwritten font-bold text-[#8b6f47] mb-2">
+                        Location
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.location}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
+                        className="w-full px-4 py-3 border-2 border-[#d4b896] rounded-lg handwritten focus:border-[#8b6f47] focus:outline-none transition-colors"
+                        placeholder="Where was this?"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Mood Field */}
+                  <div className="bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
+                    <label className="block text-sm handwritten font-bold text-[#8b6f47] mb-3">
+                      Mood
+                    </label>
+                    <div className="flex flex-wrap gap-3">
+                      {Object.keys(moodColors).map((mood) => (
+                        <button
+                          key={mood}
+                          type="button"
+                          onClick={() => setEditForm(prev => ({ ...prev, mood }))}
+                          className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl transition-all duration-200 ${
+                            editForm.mood === mood 
+                              ? 'ring-4 ring-[#8b6f47] scale-110 shadow-lg' 
+                              : 'hover:scale-105 shadow-md'
+                          }`}
+                          style={{ backgroundColor: moodColors[mood] }}
+                        >
+                          {mood}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Content Field */}
+                  <div className="bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
+                    <label className="block text-sm handwritten font-bold text-[#8b6f47] mb-2">
+                      Your Story
+                    </label>
+                    <textarea
+                      value={editForm.content}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, content: e.target.value }))}
+                      rows={10}
+                      className="w-full px-4 py-3 border-2 border-[#d4b896] rounded-lg handwritten text-base focus:border-[#8b6f47] focus:outline-none transition-colors resize-none"
+                      placeholder="Tell your story..."
+                    />
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 justify-end pt-4">
+                    <button
+                      onClick={handleCancelEdit}
+                      disabled={isSaving}
+                      className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg handwritten font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveEdit}
+                      disabled={isSaving || !editForm.title || !editForm.content}
+                      className="px-6 py-3 bg-[#8b6f47] text-white rounded-lg handwritten font-medium hover:bg-[#6d5638] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
+                    >
+                      {isSaving ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* View Mode */
+                <>
               {/* Top Row: Title/Details Left, Tags Right */}
               <div className="grid grid-cols-3 gap-4 mb-4">
                 
@@ -658,7 +895,8 @@ export default function GalleryPage() {
                   {selectedItem.content}
                 </p>
               </div>
-
+                </>
+              )}
             </div>
           </div>
         </div>
