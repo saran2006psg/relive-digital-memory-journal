@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { BookOpen, X, Calendar, MapPin, Maximize2, Tag, Mic, ChevronLeft, ChevronRight } from "lucide-react"
+import { BookOpen, X, Calendar, MapPin, Maximize2, Tag, Mic, ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
@@ -49,10 +49,18 @@ export default function GalleryPage() {
   const [error, setError] = useState("")
   const [selectedItem, setSelectedItem] = useState<Memory | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const memoriesPerPage = 9
+
+  // Helper function to check if media is audio (case-insensitive)
+  const isAudioMedia = (media: { media_type?: string; type?: string }) => {
+    const mediaType = media.media_type || media.type || ''
+    return mediaType.toLowerCase() === 'audio'
+  }
 
   useEffect(() => {
     setMounted(true)
@@ -93,12 +101,12 @@ export default function GalleryPage() {
 
       const data = await response.json()
       
-      // Normalize media data - convert 'type' to 'media_type' for consistency
+      // Normalize media data - prioritize 'media_type' over 'type' and ensure lowercase
       const normalizedMemories = (data.memories || []).map((memory: Memory) => ({
         ...memory,
         media: memory.media?.map(m => ({
           ...m,
-          media_type: m.type || m.media_type // Use 'type' from DB, fallback to media_type if already set
+          media_type: (m.media_type || m.type || '').toLowerCase() // Prioritize media_type, then type, normalize to lowercase
         }))
       }))
       
@@ -108,6 +116,56 @@ export default function GalleryPage() {
       console.error('Error fetching memories:', error)
       setError(error.message || 'Failed to load memories')
       setLoading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!selectedItem) return
+
+    setIsDeleting(true)
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        setError("Please log in to delete memories")
+        setIsDeleting(false)
+        return
+      }
+
+      const response = await fetch(`/api/memories/${selectedItem.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete memory')
+      }
+
+      // Remove from local state
+      setMemories(prev => prev.filter(m => m.id !== selectedItem.id))
+      
+      // Close modal and reset states
+      setSelectedItem(null)
+      setShowDeleteConfirm(false)
+      setIsDeleting(false)
+
+      // Adjust current page if needed
+      const totalPages = Math.ceil((memories.length - 1) / memoriesPerPage)
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages)
+      }
+
+    } catch (error: any) {
+      console.error('Error deleting memory:', error)
+      setError(error.message || 'Failed to delete memory')
+      setIsDeleting(false)
     }
   }
 
@@ -204,7 +262,7 @@ export default function GalleryPage() {
                 .slice((currentPage - 1) * memoriesPerPage, currentPage * memoriesPerPage)
                 .map((item, index) => {
                 const firstMedia = item.media && item.media.length > 0 ? item.media[0] : null
-                const hasAudio = item.media && item.media.some(m => m.media_type === 'audio')
+                const hasAudio = item.media && item.media.some(m => isAudioMedia(m))
                 const moodColor = item.mood ? moodColors[item.mood] : '#B5D99C'
                 const formattedDate = new Date(item.date).toLocaleDateString('en-US', { 
                   year: 'numeric', 
@@ -225,7 +283,7 @@ export default function GalleryPage() {
                   >
                     {/* Polaroid Card */}
                     <div
-                      className="bg-white p-4 pb-16 shadow-2xl cursor-pointer group hover:shadow-3xl transition-all duration-300 hover:scale-105 hover:rotate-0 relative"
+                      className="bg-[#f5f0e8] p-4 pb-16 shadow-2xl cursor-pointer group hover:shadow-3xl transition-all duration-300 hover:scale-105 hover:rotate-0 relative"
                       onClick={() => setSelectedItem(item)}
                     >
                       {/* Photo Container */}
@@ -320,7 +378,7 @@ export default function GalleryPage() {
                       </div>
 
                       {/* Tape Effect at Top */}
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-[#fef9f3] opacity-50 shadow-sm rotate-2" />
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-white opacity-80 shadow-md rotate-2 border border-gray-200" />
                     </div>
                   </div>
                 )
@@ -376,218 +434,278 @@ export default function GalleryPage() {
             {/* Close Button */}
             <button
               onClick={() => setSelectedItem(null)}
-              className="fixed top-4 right-4 z-50 w-10 h-10 bg-white hover:bg-red-50 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 border border-red-300"
+              className="fixed top-4 right-4 z-50 w-10 h-10 bg-white hover:bg-red-50 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 border-2 border-red-300"
             >
               <X className="w-5 h-5 text-red-500" />
             </button>
 
-            {/* Content Container */}
-            <div className="w-full min-h-screen px-8 py-10">
-              <div className="max-w-7xl mx-auto space-y-8">
-                {/* Top Section - Image Left, Title & Tags Right */}
-                <div className="grid lg:grid-cols-2 gap-8">
-                  {/* Left - Media */}
-                  <div className="flex flex-col gap-4">
-                    {/* Main Image/Video Section */}
-                    {selectedItem.media && selectedItem.media.filter(m => m.media_type !== 'audio').length > 0 ? (
-                      <div className="bg-white rounded-xl shadow-lg overflow-hidden border-4 border-white" style={{ height: '450px' }}>
-                        {/* Images/Videos Container */}
-                        <div className="w-full h-full">
-                          {selectedItem.media.filter(m => m.media_type !== 'audio').length === 1 ? (
-                            <div className="w-full h-full flex items-center justify-center bg-gray-50 p-4">
-                              {selectedItem.media.find(m => m.media_type !== 'audio')!.media_type === 'video' ? (
+            {/* Delete Button */}
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="fixed top-4 right-16 z-50 w-10 h-10 bg-white hover:bg-red-50 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 border-2 border-red-300"
+              title="Delete memory"
+            >
+              <Trash2 className="w-5 h-5 text-red-500" />
+            </button>
+
+            {/* Content Container - Grid Layout */}
+            <div className="w-full max-w-6xl mx-auto px-6 py-8 overflow-y-auto max-h-screen">
+              
+              {/* Top Row: Title/Details Left, Tags Right */}
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                
+                {/* Left: Title & Details (2 columns width) */}
+                <div className="col-span-2 bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <h2 className="text-3xl handwritten font-bold text-[#2c3e50] leading-tight flex-1">
+                      {selectedItem.title}
+                    </h2>
+                    {selectedItem.mood && (
+                      <div 
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-md border-2 border-white shrink-0"
+                        style={{ 
+                          backgroundColor: selectedItem.mood 
+                            ? moodColors[selectedItem.mood] || '#B5D99C' 
+                            : '#B5D99C' 
+                        }}
+                      >
+                        {selectedItem.mood}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Calendar className="w-4 h-4 text-[#8b6f47]" />
+                      <span className="handwritten font-medium text-[#2c3e50]">
+                        {new Date(selectedItem.date).toLocaleDateString('en-US', { 
+                          weekday: 'long',
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </span>
+                    </div>
+
+                    {selectedItem.location && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <MapPin className="w-4 h-4 text-[#8b6f47]" />
+                        <span className="handwritten font-medium text-[#2c3e50]">
+                          {selectedItem.location}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right: Tags (1 column width) */}
+                <div className="bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
+                  {selectedItem.tags && selectedItem.tags.length > 0 ? (
+                    <>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Tag className="w-4 h-4 text-[#8b6f47]" />
+                        <h3 className="text-base handwritten font-bold text-[#8b6f47]">tags</h3>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedItem.tags.map((tag, idx) => (
+                          <span
+                            key={`${tag}-${idx}`}
+                            className="px-3 py-1 rounded-full text-xs handwritten font-semibold shadow-sm"
+                            style={{
+                              borderWidth: '2px',
+                              borderStyle: 'solid',
+                              borderColor: selectedItem.mood 
+                                ? moodColors[selectedItem.mood] || '#d4a574'
+                                : '#d4a574',
+                              color: selectedItem.mood 
+                                ? moodColors[selectedItem.mood] || '#8b6f47'
+                                : '#8b6f47',
+                              backgroundColor: selectedItem.mood 
+                                ? (moodColors[selectedItem.mood] || '#d4a574') + '15'
+                                : '#d4a574' + '15'
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-4 text-sm handwritten text-gray-400">No tags</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Middle Row: Images Left, Audio Right */}
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                
+                {/* Left: Images (2 columns width) */}
+                <div className="col-span-2 bg-white rounded-xl shadow-md overflow-hidden border-2 border-[#d4b896]/30">
+                  {selectedItem.media && selectedItem.media.filter(m => !isAudioMedia(m)).length > 0 ? (
+                    <div className="p-3">
+                      {selectedItem.media.filter(m => !isAudioMedia(m)).length === 1 ? (
+                        <div className="w-full flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden" style={{ minHeight: '350px', maxHeight: '500px' }}>
+                          {selectedItem.media.find(m => !isAudioMedia(m))!.media_type === 'video' ? (
+                            <video
+                              src={selectedItem.media.find(m => !isAudioMedia(m))!.url}
+                              controls
+                              className="w-full h-full object-contain"
+                            >
+                              Your browser does not support the video tag.
+                            </video>
+                          ) : (
+                            <img
+                              src={
+                                isCloudinaryUrl(selectedItem.media.find(m => !isAudioMedia(m))!.url)
+                                  ? getOptimizedImageUrl(selectedItem.media.find(m => !isAudioMedia(m))!.url, {
+                                      width: 1200,
+                                      quality: 'auto:good',
+                                      format: 'auto',
+                                      crop: 'limit'
+                                    })
+                                  : selectedItem.media.find(m => !isAudioMedia(m))!.url
+                              }
+                              alt={selectedItem.title}
+                              className="max-w-full max-h-full object-contain"
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2 max-h-[500px] overflow-y-auto">
+                          {selectedItem.media.filter(m => !isAudioMedia(m)).map((media, idx) => (
+                            <div key={media.id} className="relative overflow-hidden rounded-lg bg-gray-50" style={{ minHeight: '200px' }}>
+                              {media.media_type === 'video' ? (
                                 <video
-                                  src={selectedItem.media.find(m => m.media_type !== 'audio')!.url}
+                                  src={media.url}
                                   controls
-                                  className="w-full h-full object-contain rounded-lg"
+                                  className="w-full h-full object-contain"
                                 >
                                   Your browser does not support the video tag.
                                 </video>
                               ) : (
                                 <img
                                   src={
-                                    isCloudinaryUrl(selectedItem.media.find(m => m.media_type !== 'audio')!.url)
-                                      ? getOptimizedImageUrl(selectedItem.media.find(m => m.media_type !== 'audio')!.url, {
-                                          width: 1200,
+                                    isCloudinaryUrl(media.url)
+                                      ? getOptimizedImageUrl(media.url, {
+                                          width: 600,
                                           quality: 'auto:good',
                                           format: 'auto',
                                           crop: 'limit'
                                         })
-                                      : selectedItem.media.find(m => m.media_type !== 'audio')!.url
+                                      : media.url
                                   }
-                                  alt={selectedItem.title}
-                                  className="w-full h-full object-contain rounded-lg"
+                                  alt={`${selectedItem.title} - ${idx + 1}`}
+                                  className="w-full h-full object-contain hover:scale-105 transition-transform duration-300 cursor-pointer p-2"
                                 />
                               )}
                             </div>
-                          ) : (
-                            <div className="grid grid-cols-2 gap-3 p-3 h-full">
-                              {selectedItem.media.filter(m => m.media_type !== 'audio').map((media, idx) => (
-                                <div key={media.id} className="relative overflow-hidden rounded-lg bg-gray-50">
-                                  {media.media_type === 'video' ? (
-                                    <video
-                                      src={media.url}
-                                      controls
-                                      className="w-full h-full object-cover"
-                                    >
-                                      Your browser does not support the video tag.
-                                    </video>
-                                  ) : (
-                                    <img
-                                      src={
-                                        isCloudinaryUrl(media.url)
-                                          ? getOptimizedImageUrl(media.url, {
-                                              width: 600,
-                                              height: 400,
-                                              quality: 'auto:good',
-                                              format: 'auto',
-                                              crop: 'fill',
-                                              gravity: 'auto'
-                                            })
-                                          : media.url
-                                      }
-                                      alt={`${selectedItem.title} - ${idx + 1}`}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-[350px]">
+                      <div className="text-center">
+                        <BookOpen className="w-12 h-12 text-[#d4b896] mx-auto mb-2" />
+                        <p className="text-sm handwritten text-[#7f8c8d]">No images</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right: Audio (1 column width) */}
+                <div className="bg-white rounded-xl shadow-md border-2 border-[#d4b896]/30 overflow-hidden flex flex-col">
+                  {selectedItem.media && selectedItem.media.filter(m => isAudioMedia(m)).length > 0 ? (
+                    <>
+                      <div className="bg-linear-to-r from-[#8b6f47]/10 to-transparent px-4 py-3 border-b border-[#d4b896]/20">
+                        <div className="flex items-center gap-2">
+                          <Mic className="w-4 h-4 text-[#8b6f47]" />
+                          <h3 className="text-sm handwritten font-bold text-[#8b6f47]">audio</h3>
                         </div>
                       </div>
-                    ) : (!selectedItem.media || selectedItem.media.length === 0) ? (
-                      <div className="bg-white rounded-xl shadow-lg border-4 border-white flex items-center justify-center h-[450px]">
-                        <div className="text-center">
-                          <BookOpen className="w-16 h-16 text-[#d4b896] mx-auto mb-3" />
-                          <p className="text-base handwritten text-[#7f8c8d]">No media attached</p>
-                        </div>
-                      </div>
-                    ) : null}
-                    
-                    {/* Audio Section - Separate, compact design */}
-                    {selectedItem.media && selectedItem.media.filter(m => m.media_type === 'audio').length > 0 && (
-                      <div className="bg-white rounded-xl shadow-md border border-[#d4b896]/20 overflow-hidden">
-                        {selectedItem.media.filter(m => m.media_type === 'audio').map((audio) => (
-                          <div key={audio.id} className="flex items-center gap-3 p-3 bg-gradient-to-r from-[#3498db]/5 to-transparent">
-                            <div className="w-10 h-10 bg-[#3498db] rounded-full flex items-center justify-center shrink-0 shadow-sm">
-                              <Mic className="w-5 h-5 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs handwritten text-[#7f8c8d] mb-1">Audio Memory</p>
-                              <audio 
-                                src={audio.url} 
-                                controls 
-                                preload="metadata"
-                                className="w-full" 
-                                style={{ height: '32px', maxHeight: '32px' }} 
-                              />
-                            </div>
+                      <div className="p-4 flex-1 flex flex-col justify-center">
+                        {selectedItem.media.filter(m => isAudioMedia(m)).map((audio) => (
+                          <div key={audio.id} className="w-full">
+                            <audio 
+                              src={audio.url} 
+                              controls 
+                              preload="metadata"
+                              className="w-full" 
+                              style={{ height: '40px', maxHeight: '40px' }} 
+                            />
                           </div>
                         ))}
                       </div>
-                    )}
-                  </div>
-
-                  {/* Right - Title, Date, Location & Tags */}
-                  <div className="bg-white rounded-xl shadow-lg p-8 border border-[#d4b896]/30 flex flex-col gap-6">
-                    {/* Title & Mood */}
-                    <div className="flex items-start gap-4">
-                      <div className="flex-1">
-                        <h2 className="text-4xl handwritten font-bold text-[#2c3e50] leading-tight">
-                          {selectedItem.title}
-                        </h2>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-full min-h-[200px] py-8">
+                      <div className="text-center">
+                        <Mic className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                        <p className="text-xs handwritten text-gray-400">No audio</p>
                       </div>
-                      {selectedItem.mood && (
-                        <div 
-                          className="w-14 h-14 rounded-full flex items-center justify-center text-3xl shadow-lg border-2 border-white shrink-0"
-                          style={{ 
-                            backgroundColor: selectedItem.mood 
-                              ? moodColors[selectedItem.mood] || '#B5D99C' 
-                              : '#B5D99C' 
-                          }}
-                        >
-                          {selectedItem.mood}
-                        </div>
-                      )}
                     </div>
-
-                    {/* Date & Location */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-3">
-                        <Calendar className="w-5 h-5 text-[#8b6f47]" />
-                        <span className="text-base handwritten font-medium text-[#2c3e50]">
-                          {new Date(selectedItem.date).toLocaleDateString('en-US', { 
-                            weekday: 'long',
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}
-                        </span>
-                      </div>
-
-                      {selectedItem.location && (
-                        <div className="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-3">
-                          <MapPin className="w-5 h-5 text-[#8b6f47]" />
-                          <span className="text-base handwritten font-medium text-[#2c3e50]">
-                            {selectedItem.location}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Tags */}
-                    {selectedItem.tags && selectedItem.tags.length > 0 && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#d4b896]/30">
-                          <Tag className="w-5 h-5 text-[#8b6f47]" />
-                          <h3 className="text-xl handwritten font-bold text-[#8b6f47]">
-                            Memory Tags
-                          </h3>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedItem.tags.map((tag, idx) => (
-                            <span
-                              key={`${tag}-${idx}`}
-                              className="px-4 py-2 rounded-full text-sm handwritten font-semibold shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 cursor-pointer"
-                              style={{
-                                borderWidth: '2px',
-                                borderStyle: 'solid',
-                                borderColor: selectedItem.mood 
-                                  ? moodColors[selectedItem.mood] || '#d4a574'
-                                  : '#d4a574',
-                                color: selectedItem.mood 
-                                  ? moodColors[selectedItem.mood] || '#8b6f47'
-                                  : '#8b6f47',
-                                backgroundColor: selectedItem.mood 
-                                  ? (moodColors[selectedItem.mood] || '#d4a574') + '15'
-                                  : '#d4a574' + '15'
-                              }}
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Bottom Section - Story (Full Width) */}
-                <div className="bg-white rounded-xl shadow-lg p-10 border border-[#d4b896]/30">
-                  <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-[#d4b896]/30">
-                    <BookOpen className="w-6 h-6 text-[#8b6f47]" />
-                    <h3 className="text-2xl handwritten font-bold text-[#8b6f47]">
-                      Your Story
-                    </h3>
-                  </div>
-                  <div className="max-w-4xl">
-                    <p className="text-lg handwritten text-[#34495e] leading-relaxed whitespace-pre-wrap">
-                      {selectedItem.content}
-                    </p>
-                  </div>
+                  )}
                 </div>
               </div>
+
+              {/* Bottom Row: Your Story (Full Width) */}
+              <div className="bg-white rounded-xl shadow-md p-6 border-2 border-[#d4b896]/30">
+                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#d4b896]/20">
+                  <BookOpen className="w-5 h-5 text-[#8b6f47]" />
+                  <h3 className="text-lg handwritten font-bold text-[#8b6f47]">your story</h3>
+                </div>
+                <p className="text-base handwritten text-[#34495e] leading-relaxed whitespace-pre-wrap">
+                  {selectedItem.content}
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-60 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border-4 border-red-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-2xl handwritten font-bold text-[#2c3e50]">
+                Delete Memory?
+              </h3>
+            </div>
+            
+            <p className="text-base handwritten text-[#7f8c8d] mb-6">
+              Are you sure you want to delete "{selectedItem?.title}"? This action cannot be undone and all associated media will be permanently removed.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg handwritten font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg handwritten font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
