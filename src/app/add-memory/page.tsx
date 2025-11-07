@@ -575,7 +575,7 @@ export default function AddMemoryPage() {
                   <input
                     type="file"
                     multiple
-                    accept="image/*,video/*"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/tiff,image/svg+xml,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska,video/x-ms-wmv,video/x-flv,video/x-m4v"
                     onChange={handleFileUpload}
                     className="hidden"
                   />
@@ -621,7 +621,7 @@ export default function AddMemoryPage() {
                     <input
                       type="file"
                       multiple
-                      accept="image/*,video/*"
+                      accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/tiff,image/svg+xml,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska,video/x-ms-wmv,video/x-flv,video/x-m4v"
                       onChange={handleFileUpload}
                       className="hidden"
                     />

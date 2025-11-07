@@ -432,7 +432,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/dashboard" className="flex items-center gap-2">
               <BookOpen className="w-6 h-6 text-[#8b6f47]" />
               <span className="text-2xl handwritten font-bold text-[#8b6f47]">ReLive</span>
             </Link>
