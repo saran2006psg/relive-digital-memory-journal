@@ -52,6 +52,7 @@ export default function AddMemoryPage() {
   const [expandedImageIndex, setExpandedImageIndex] = useState<number | null>(null)
   const [isRecording, setIsRecording] = useState(false)
   const [showAllMoods, setShowAllMoods] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const recognitionRef = useRef<any>(null)
   
   // Audio recording states
@@ -92,6 +93,18 @@ export default function AddMemoryPage() {
     URL.revokeObjectURL(uploadPreviews[index])
     setUploadPreviews(uploadPreviews.filter((_, i) => i !== index))
   }
+
+  // Check screen size on mount
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Initialize speech recognition
   useEffect(() => {
@@ -447,7 +460,7 @@ export default function AddMemoryPage() {
                   : 'grid-cols-4 sm:grid-cols-6'
               }`}>
                 {moodEmojis
-                  .slice(0, showAllMoods ? moodEmojis.length : (window.innerWidth >= 640 ? 6 : 4))
+                  .slice(0, showAllMoods ? moodEmojis.length : (isMobile ? 4 : 6))
                   .map((mood) => (
                     <button
                       key={mood.label}
