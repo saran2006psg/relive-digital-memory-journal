@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { UserMenu } from "@/components/UserMenu"
+import { MobileNav } from "@/components/MobileNav"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { createBrowserClient } from "@supabase/ssr"
 import { getThumbnailUrl, getOptimizedImageUrl, isCloudinaryUrl } from "@/lib/cloudinary"
@@ -276,11 +277,19 @@ export default function GalleryPage() {
       <header className="border-b border-[#d4b896]/60 bg-white/80 backdrop-blur-xl sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
+            {/* Mobile Menu */}
+            <div className="md:hidden">
+              <MobileNav />
+            </div>
+
+            {/* Logo */}
             <Link href="/dashboard" className="flex items-center gap-2">
               <BookOpen className="w-6 h-6 text-[#8b6f47]" />
               <span className="text-2xl handwritten font-bold text-[#8b6f47]">ReLive</span>
             </Link>
-            <nav className="flex items-center gap-6">
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-6">
               <Link href="/dashboard" className="text-sm handwritten font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
                 Dashboard
               </Link>
@@ -293,8 +302,12 @@ export default function GalleryPage() {
               <Link href="/gallery" className="text-sm handwritten font-semibold text-[#8b6f47]">
                 Gallery
               </Link>
-              <UserMenu />
             </nav>
+
+            {/* User Menu */}
+            <div className="flex items-center">
+              <UserMenu />
+            </div>
           </div>
         </div>
       </header>
@@ -302,12 +315,12 @@ export default function GalleryPage() {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Page Title */}
         <div className="mb-8">
-          <h1 className="text-5xl handwritten font-bold text-[#8b6f47] mb-2">Memory Gallery</h1>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl handwritten font-bold text-[#8b6f47] mb-2">Memory Gallery</h1>
           {loading ? (
-            <p className="text-lg handwritten text-[#7f8c8d]">Loading your memories...</p>
+            <p className="text-base sm:text-lg handwritten text-[#7f8c8d]">Loading your memories...</p>
           ) : (
-            <div className="flex items-center justify-between">
-              <p className="text-lg handwritten text-[#7f8c8d]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <p className="text-base sm:text-lg handwritten text-[#7f8c8d]">
                 Showing {memories.length} {memories.length === 1 ? 'memory' : 'memories'}
               </p>
               {memories.length > memoriesPerPage && (

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { UserMenu } from "@/components/UserMenu"
+import { MobileNav } from "@/components/MobileNav"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 
 const dashboardSections: {
@@ -425,11 +426,19 @@ export default function DashboardPage() {
       <header className="sticky top-0 z-30 border-b border-[#d4b896]/60 bg-white/80 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
+            {/* Mobile Menu */}
+            <div className="md:hidden">
+              <MobileNav />
+            </div>
+
+            {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
               <BookOpen className="w-6 h-6 text-[#8b6f47]" />
               <span className="text-2xl handwritten font-bold text-[#8b6f47]">ReLive</span>
             </Link>
-            <nav className="flex items-center gap-6">
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-6">
               <Link href="/dashboard" className="text-sm handwritten font-semibold text-[#8b6f47]">
                 Dashboard
               </Link>
@@ -442,8 +451,12 @@ export default function DashboardPage() {
               <Link href="/gallery" className="text-sm handwritten font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
                 Gallery
               </Link>
-              <UserMenu />
             </nav>
+
+            {/* User Menu - Always visible */}
+            <div className="flex items-center">
+              <UserMenu />
+            </div>
           </div>
         </div>
       </header>
@@ -455,20 +468,20 @@ export default function DashboardPage() {
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
         >
-          <div className="bg-[#faf5ed] shadow-xl rounded-r-lg border-l-4 border-[#d4a574] p-8 relative overflow-hidden">
-            <div className="absolute left-16 top-0 bottom-0 w-0.5 bg-[#d4a574]/20" />
+          <div className="bg-[#faf5ed] shadow-xl rounded-r-lg border-l-4 border-[#d4a574] p-4 md:p-8 relative overflow-hidden">
+            <div className="hidden md:block absolute left-16 top-0 bottom-0 w-0.5 bg-[#d4a574]/20" />
             <div className="absolute inset-0 pointer-events-none opacity-10">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="h-8 border-b border-[#a8d5e2]" />
               ))}
             </div>
             
-            <div className="relative pl-12">
-              <h1 className="text-5xl md:text-6xl handwritten font-bold text-[#2c3e50] mb-2">
+            <div className="relative md:pl-12">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl handwritten font-bold text-[#2c3e50] mb-2">
                 {getGreeting()}, {userName || 'Traveler'}
               </h1>
-              <p className="text-2xl handwritten text-[#7f8c8d] flex items-center gap-2">
-                <Sparkles className="w-6 h-6" />
+              <p className="text-lg sm:text-xl md:text-2xl handwritten text-[#7f8c8d] flex items-center gap-2">
+                <Sparkles className="w-5 h-5 md:w-6 md:h-6" />
                 Let's revisit some beautiful moments
               </p>
             </div>
@@ -485,12 +498,12 @@ export default function DashboardPage() {
                 mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
             >
-              <div className="flex items-center gap-3 mb-4">
-                <h2 className="text-3xl handwritten font-bold text-[#8b6f47]">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
+                <h2 className="text-2xl sm:text-3xl handwritten font-bold text-[#8b6f47]">
                   On This Day
                 </h2>
                 {onThisDayContext && (
-                  <span className="text-lg handwritten text-[#7f8c8d]">
+                  <span className="text-base sm:text-lg handwritten text-[#7f8c8d]">
                     · {onThisDayContext}
                   </span>
                 )}
@@ -592,12 +605,12 @@ export default function DashboardPage() {
                 mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
             >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-3xl handwritten font-bold text-[#8b6f47]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <h2 className="text-2xl sm:text-3xl handwritten font-bold text-[#8b6f47]">
                   Mood Journey
                 </h2>
                 {/* Period Selector */}
-                <div className="flex gap-2 bg-[#faf5ed] rounded-lg p-1 shadow-sm border border-[#d4a574]/30">
+                <div className="flex gap-2 bg-[#faf5ed] rounded-lg p-1 shadow-sm border border-[#d4a574]/30 w-fit">
                   <button
                     onClick={() => setMoodPeriod('month')}
                     className={`px-3 py-1 rounded-md text-sm handwritten font-medium transition-all duration-200 ${
@@ -621,19 +634,19 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              <div className="bg-[#faf5ed] shadow-lg rounded-r-lg border-l-4 border-[#d4a574] p-6 relative overflow-hidden">
-                <div className="absolute left-16 top-0 bottom-0 w-0.5 bg-[#d4a574]/20" />
+              <div className="bg-[#faf5ed] shadow-lg rounded-r-lg border-l-4 border-[#d4a574] p-4 md:p-6 relative overflow-hidden">
+                <div className="hidden md:block absolute left-16 top-0 bottom-0 w-0.5 bg-[#d4a574]/20" />
                 <div className="absolute inset-0 pointer-events-none opacity-10">
                   {[...Array(30)].map((_, i) => (
                     <div key={i} className="h-8 border-b border-[#a8d5e2]" />
                   ))}
                 </div>
 
-                <div className="relative pl-12">
-                  <h3 className="text-center handwritten text-2xl font-bold text-[#2c3e50] mb-1">
+                <div className="relative md:pl-12">
+                  <h3 className="text-center handwritten text-xl md:text-2xl font-bold text-[#2c3e50] mb-1">
                     {moodPeriod === 'month' ? 'This Month' : 'This Year'}
                   </h3>
-                  <p className="text-center handwritten text-lg text-[#7f8c8d] mb-6">Your emotional landscape</p>
+                  <p className="text-center handwritten text-base md:text-lg text-[#7f8c8d] mb-6">Your emotional landscape</p>
 
                   {loadingMoods ? (
                     <div className="flex items-center justify-center py-12">
@@ -642,7 +655,7 @@ export default function DashboardPage() {
                   ) : moodData.length > 0 ? (
                     <>
                       {/* Mood Ring Chart */}
-                      <div className="relative w-48 h-48 mx-auto mb-6">
+                      <div className="relative w-40 h-40 sm:w-48 sm:h-48 mx-auto mb-6">
                         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                           {moodData.map((mood, index) => {
                             const totalCount = moodData.reduce((acc, m) => acc + m.count, 0)
@@ -722,12 +735,12 @@ export default function DashboardPage() {
       <Link href="/add-memory">
         <Button
           size="lg"
-          className={`fixed bottom-8 right-8 rounded-full w-16 h-16 shadow-2xl hover:shadow-xl transition-all duration-300 hover:scale-110 handwritten ${
+          className={`fixed bottom-6 right-6 md:bottom-8 md:right-8 rounded-full w-14 h-14 md:w-16 md:h-16 shadow-2xl hover:shadow-xl transition-all duration-300 hover:scale-110 handwritten z-40 ${
             mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
           }`}
           style={{ transitionDelay: '400ms' }}
         >
-          <Plus className="w-8 h-8" />
+          <Plus className="w-6 h-6 md:w-8 md:h-8" />
         </Button>
       </Link>
     </div>

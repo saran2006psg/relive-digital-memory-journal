@@ -5,6 +5,7 @@ import { BookOpen, Calendar, MapPin, Tag, Clock, Heart, Sparkles, X, Mic, Chevro
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { UserMenu } from "@/components/UserMenu"
+import { MobileNav } from "@/components/MobileNav"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { createBrowserClient } from "@supabase/ssr"
 import { getThumbnailUrl, getOptimizedImageUrl, isCloudinaryUrl } from "@/lib/cloudinary"
@@ -237,11 +238,19 @@ function TimelineContent() {
       <header className="border-b border-[#d4b896]/60 bg-white/80 backdrop-blur-xl sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
+            {/* Mobile Menu */}
+            <div className="md:hidden">
+              <MobileNav />
+            </div>
+
+            {/* Logo */}
             <Link href="/dashboard" className="flex items-center gap-2">
               <BookOpen className="w-6 h-6 text-[#8b6f47]" />
               <span className="text-2xl handwritten font-bold text-[#8b6f47]">ReLive</span>
             </Link>
-            <nav className="flex items-center gap-6">
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-6">
               <Link href="/dashboard" className="text-sm handwritten font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
                 Dashboard
               </Link>
@@ -254,8 +263,12 @@ function TimelineContent() {
               <Link href="/gallery" className="text-sm handwritten font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
                 Gallery
               </Link>
-              <UserMenu />
             </nav>
+
+            {/* User Menu */}
+            <div className="flex items-center">
+              <UserMenu />
+            </div>
           </div>
         </div>
       </header>

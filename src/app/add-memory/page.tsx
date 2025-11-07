@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Calendar, MapPin, Image as ImageIcon, Video, X, Save, BookOpen, ArrowLeft, Maximize2, Mic, MicOff } from "lucide-react"
+import { Calendar, MapPin, Image as ImageIcon, Video, X, Save, BookOpen, ArrowLeft, Maximize2, Mic, MicOff, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { UserMenu } from "@/components/UserMenu"
+import { MobileNav } from "@/components/MobileNav"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { createBrowserClient } from "@supabase/ssr"
 
@@ -50,6 +51,7 @@ export default function AddMemoryPage() {
   const [completedSteps, setCompletedSteps] = useState<string[]>([])
   const [expandedImageIndex, setExpandedImageIndex] = useState<number | null>(null)
   const [isRecording, setIsRecording] = useState(false)
+  const [showAllMoods, setShowAllMoods] = useState(false)
   const recognitionRef = useRef<any>(null)
   
   // Audio recording states
@@ -370,11 +372,19 @@ export default function AddMemoryPage() {
       <header className="border-b border-[#d4b896]/60 bg-white/80 backdrop-blur-xl sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
+            {/* Mobile Menu */}
+            <div className="md:hidden">
+              <MobileNav />
+            </div>
+
+            {/* Logo */}
             <Link href="/dashboard" className="flex items-center gap-2">
               <BookOpen className="w-6 h-6 text-[#8b6f47]" />
               <span className="text-2xl handwritten font-bold text-[#8b6f47]">ReLive</span>
             </Link>
-            <nav className="flex items-center gap-6">
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-6">
               <Link href="/dashboard" className="text-sm handwritten font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
                 Dashboard
               </Link>
@@ -387,8 +397,12 @@ export default function AddMemoryPage() {
               <Link href="/gallery" className="text-sm handwritten font-medium text-[#8b6f47]/70 hover:text-[#8b6f47] transition-colors">
                 Gallery
               </Link>
-              <UserMenu />
             </nav>
+
+            {/* User Menu */}
+            <div className="flex items-center">
+              <UserMenu />
+            </div>
           </div>
         </div>
       </header>
@@ -411,44 +425,60 @@ export default function AddMemoryPage() {
         </div>
 
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
-          {/* Left Column - Mood, Tags, Media (Smaller - 2 cols) */}
-          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
+          {/* Left Column - Mood, Tags, Media (Smaller - 2 cols on desktop) */}
+          <div className="lg:col-span-2 space-y-3 lg:space-y-4">
             {/* Mood Selector */}
-            <div className="bg-white shadow-sm rounded-xl border border-[#ff9a8b]/30 p-3 sm:p-4">
-              <h3 className="text-base sm:text-lg handwritten font-bold mb-2 text-[#2c3e50]">How are you feeling?</h3>
-              <div className="grid grid-cols-6 gap-1">
-                {moodEmojis.map((mood) => (
-                  <button
-                    key={mood.label}
-                    onClick={() => setSelectedMood(mood.emoji)}
-                    className={`aspect-square rounded-lg flex items-center justify-center text-xl sm:text-2xl transition-all duration-200 hover:scale-105 ${
-                      selectedMood === mood.emoji
-                        ? 'ring-2 ring-[#3498db] shadow-md scale-105'
-                        : 'hover:bg-[#fef9f3] border border-transparent hover:border-[#d4b896]/50'
-                    }`}
-                    style={{
-                      backgroundColor: selectedMood === mood.emoji ? mood.color + '40' : 'transparent'
-                    }}
-                    title={mood.label}
-                  >
-                    {mood.emoji}
-                  </button>
-                ))}
+            <div className="bg-white shadow-sm rounded-xl border border-[#ff9a8b]/30 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base sm:text-lg handwritten font-bold text-[#2c3e50]">How are you feeling?</h3>
+                {/* Toggle button - visible on all screen sizes */}
+                <button
+                  onClick={() => setShowAllMoods(!showAllMoods)}
+                  className="text-xs handwritten font-medium text-[#3498db] hover:text-[#2980b9] transition-colors flex items-center gap-1"
+                >
+                  {showAllMoods ? 'Show Less' : 'Show More'}
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllMoods ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+              <div className={`grid gap-2 transition-all duration-300 ${
+                showAllMoods 
+                  ? 'grid-cols-4 sm:grid-cols-6' 
+                  : 'grid-cols-4 sm:grid-cols-6'
+              }`}>
+                {moodEmojis
+                  .slice(0, showAllMoods ? moodEmojis.length : (window.innerWidth >= 640 ? 6 : 4))
+                  .map((mood) => (
+                    <button
+                      key={mood.label}
+                      onClick={() => setSelectedMood(mood.emoji)}
+                      className={`aspect-square rounded-lg flex items-center justify-center text-2xl sm:text-3xl transition-all duration-200 hover:scale-105 ${
+                        selectedMood === mood.emoji
+                          ? 'ring-2 ring-[#3498db] shadow-md scale-105'
+                          : 'hover:bg-[#fef9f3] border border-transparent hover:border-[#d4b896]/50'
+                      }`}
+                      style={{
+                        backgroundColor: selectedMood === mood.emoji ? mood.color + '40' : 'transparent'
+                      }}
+                      title={mood.label}
+                    >
+                      {mood.emoji}
+                    </button>
+                  ))}
               </div>
               {selectedMood && (
-                <p className="text-xs sm:text-sm handwritten text-center mt-1.5 text-[#7f8c8d]">
+                <p className="text-sm handwritten text-center mt-2 text-[#7f8c8d]">
                   Feeling {moodEmojis.find(m => m.emoji === selectedMood)?.label} ✨
                 </p>
               )}
             </div>
 
             {/* Tags */}
-            <div className="bg-white shadow-sm rounded-xl border border-[#8dd3c7]/30 p-3 sm:p-4">
-              <h3 className="text-base sm:text-lg handwritten font-bold mb-2 text-[#2c3e50]">Tags</h3>
+            <div className="bg-white shadow-sm rounded-xl border border-[#8dd3c7]/30 p-4">
+              <h3 className="text-base sm:text-lg handwritten font-bold mb-3 text-[#2c3e50]">Tags</h3>
               
               {/* Tag Input */}
-              <div className="flex gap-1.5 mb-2">
+              <div className="flex gap-2 mb-3">
                 <Input
                   placeholder="Add a tag..."
                   value={tagInput}
@@ -459,24 +489,24 @@ export default function AddMemoryPage() {
                       handleAddTag(tagInput)
                     }
                   }}
-                  className="handwritten text-xs sm:text-sm bg-[#fef9f3] border-[#d4b896] rounded-lg py-1.5 px-2.5"
+                  className="handwritten text-sm bg-[#fef9f3] border-[#d4b896] rounded-lg py-2 px-3"
                 />
                 <Button
                   onClick={() => handleAddTag(tagInput)}
                   size="sm"
-                  className="handwritten text-xs sm:text-sm bg-[#8dd3c7] hover:bg-[#7bc4ba] text-white px-3 sm:px-4 rounded-lg"
+                  className="handwritten text-sm bg-[#8dd3c7] hover:bg-[#7bc4ba] text-white px-4 rounded-lg whitespace-nowrap"
                 >
                   Add
                 </Button>
               </div>
 
               {/* Tag Suggestions */}
-              <div className="flex flex-wrap gap-1 mb-2">
+              <div className="flex flex-wrap gap-1.5 mb-3">
                 {tagSuggestions.map((tag) => (
                   <button
                     key={tag}
                     onClick={() => handleAddTag(tag)}
-                    className="px-2 py-0.5 text-xs handwritten font-medium rounded-full border border-dashed border-[#d4b896] hover:bg-[#fef9f3] hover:border-[#3498db] transition-all"
+                    className="px-2.5 py-1 text-xs handwritten font-medium rounded-full border border-dashed border-[#d4b896] hover:bg-[#fef9f3] hover:border-[#3498db] transition-all"
                   >
                     {tag}
                   </button>
@@ -485,7 +515,7 @@ export default function AddMemoryPage() {
 
               {/* Selected Tags */}
               {tags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1.5">
                   {tags.map((tag, index) => {
                     const colors = ['#B5D99C', '#8dd3c7', '#ff9a8b', '#3498db', '#C8B8DB', '#FFD56F']
                     return (
@@ -513,20 +543,20 @@ export default function AddMemoryPage() {
             </div>
 
             {/* Media Upload */}
-            <div className="bg-white shadow-sm rounded-xl border border-[#b5d99c]/30 p-3 sm:p-4">
-              <h3 className="text-base sm:text-lg handwritten font-bold mb-2 text-[#2c3e50]">Photos & Videos</h3>
+            <div className="bg-white shadow-sm rounded-xl border border-[#b5d99c]/30 p-4">
+              <h3 className="text-base sm:text-lg handwritten font-bold mb-3 text-[#2c3e50]">Photos & Videos</h3>
               
               {/* Upload Button - Only show if no files uploaded */}
               {uploadPreviews.length === 0 ? (
-                <label className="flex flex-col items-center justify-center border-2 border-dashed border-[#d4b896] rounded-xl p-4 sm:p-6 cursor-pointer hover:border-[#3498db] hover:bg-[#fef9f3] transition-all duration-200">
-                  <div className="flex gap-2 mb-1">
-                    <ImageIcon className="w-5 h-5 text-[#7f8c8d]" />
-                    <Video className="w-5 h-5 text-[#7f8c8d]" />
+                <label className="flex flex-col items-center justify-center border-2 border-dashed border-[#d4b896] rounded-xl p-6 cursor-pointer hover:border-[#3498db] hover:bg-[#fef9f3] transition-all duration-200">
+                  <div className="flex gap-2 mb-2">
+                    <ImageIcon className="w-6 h-6 text-[#7f8c8d]" />
+                    <Video className="w-6 h-6 text-[#7f8c8d]" />
                   </div>
-                  <p className="text-xs sm:text-sm handwritten text-[#7f8c8d] text-center font-medium">
+                  <p className="text-sm handwritten text-[#7f8c8d] text-center font-medium">
                     Click to upload photos or videos
                   </p>
-                  <p className="text-xs handwritten text-[#7f8c8d]/70 text-center mt-0.5">
+                  <p className="text-xs handwritten text-[#7f8c8d]/70 text-center mt-1">
                     Max 10MB per file
                   </p>
                   <input
@@ -540,7 +570,7 @@ export default function AddMemoryPage() {
               ) : (
                 <>
                   {/* Uploaded Files Preview with Grid */}
-                  <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
                     {uploadPreviews.map((preview, index) => (
                       <div key={index} className="relative">
                         <div className="relative rounded-lg overflow-hidden shadow-sm group border border-[#d4b896]/30 bg-[#fef9f3]">
@@ -588,15 +618,15 @@ export default function AddMemoryPage() {
             </div>
 
             {/* Audio Recording */}
-            <div className="bg-white shadow-sm rounded-xl border border-[#b5d99c]/30 p-3 sm:p-4">
-              <h3 className="text-base sm:text-lg handwritten font-bold mb-2 text-[#2c3e50]">Audio Recording</h3>
+            <div className="bg-white shadow-sm rounded-xl border border-[#b5d99c]/30 p-4">
+              <h3 className="text-base sm:text-lg handwritten font-bold mb-3 text-[#2c3e50]">Audio Recording</h3>
               
               {!audioURL ? (
                 <div className="space-y-2">
                   <button
                     type="button"
                     onClick={isRecordingAudio ? stopAudioRecording : startAudioRecording}
-                    className={`w-full flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-4 sm:p-6 transition-all duration-200 ${
+                    className={`w-full flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 transition-all duration-200 ${
                       isRecordingAudio 
                         ? 'border-red-500 bg-red-50 animate-pulse' 
                         : 'border-[#d4b896] hover:border-[#3498db] hover:bg-[#fef9f3] cursor-pointer'
@@ -618,10 +648,10 @@ export default function AddMemoryPage() {
                     ) : (
                       <>
                         <Mic className="w-8 h-8 text-[#7f8c8d] mb-2" />
-                        <p className="text-xs sm:text-sm handwritten text-[#7f8c8d] text-center font-medium">
+                        <p className="text-sm handwritten text-[#7f8c8d] text-center font-medium">
                           Click to record audio
                         </p>
-                        <p className="text-xs handwritten text-[#7f8c8d]/70 text-center mt-0.5">
+                        <p className="text-xs handwritten text-[#7f8c8d]/70 text-center mt-1">
                           Share your voice with your memory
                         </p>
                       </>
@@ -632,7 +662,7 @@ export default function AddMemoryPage() {
                 <div className="space-y-2">
                   <div className="bg-[#fef9f3] border border-[#d4b896]/30 rounded-xl p-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-[#3498db]/10 rounded-full flex items-center justify-center">
+                      <div className="shrink-0 w-10 h-10 bg-[#3498db]/10 rounded-full flex items-center justify-center">
                         <Mic className="w-5 h-5 text-[#3498db]" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -641,7 +671,7 @@ export default function AddMemoryPage() {
                       </div>
                       <button
                         onClick={deleteAudioRecording}
-                        className="flex-shrink-0 p-1.5 bg-[#e74c3c] text-white rounded-full hover:bg-[#c0392b] transition-all hover:scale-110 shadow-sm"
+                        className="shrink-0 p-1.5 bg-[#e74c3c] text-white rounded-full hover:bg-[#c0392b] transition-all hover:scale-110 shadow-sm"
                         title="Delete recording"
                       >
                         <X className="w-4 h-4" />
@@ -654,10 +684,10 @@ export default function AddMemoryPage() {
             </div>
           </div>
 
-          {/* Right Column - Text Editor (Larger - 3 cols) */}
+          {/* Right Column - Text Editor (Larger - 3 cols on desktop) */}
           <div className="lg:col-span-3">
-            <div className="bg-white shadow-md rounded-2xl border border-[#3498db]/30 p-4 sm:p-6 lg:p-8">
-              <div className="space-y-4 sm:space-y-6">
+            <div className="bg-white shadow-md rounded-2xl border border-[#3498db]/30 p-4 sm:p-6">
+              <div className="space-y-4">
                 {/* Title Input */}
                 <div className="space-y-2">
                   <Label htmlFor="title" className="text-base sm:text-lg handwritten font-semibold text-[#2c3e50]">
@@ -668,15 +698,15 @@ export default function AddMemoryPage() {
                     placeholder="Give your memory a title..."
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="text-xl sm:text-2xl handwritten font-bold bg-[#fef9f3] border-2 border-[#d4b896] rounded-xl px-3 sm:px-4 py-2 sm:py-3 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20 text-[#2c3e50]"
+                    className="text-lg sm:text-xl handwritten font-bold bg-[#fef9f3] border-2 border-[#d4b896] rounded-xl px-3 sm:px-4 py-2 sm:py-3 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20 text-[#2c3e50]"
                   />
                 </div>
 
                 {/* Date and Location */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="date" className="text-sm sm:text-base handwritten font-semibold flex items-center gap-2 text-[#2c3e50]">
-                      <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <Calendar className="w-4 h-4" />
                       Date
                     </Label>
                     <Input
@@ -684,12 +714,12 @@ export default function AddMemoryPage() {
                       type="date"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
-                      className="handwritten text-sm sm:text-base bg-[#fef9f3] border-2 border-[#d4b896] rounded-xl px-3 sm:px-4 py-2 sm:py-3 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20"
+                      className="handwritten text-sm bg-[#fef9f3] border-2 border-[#d4b896] rounded-xl px-3 py-2 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="location" className="text-sm sm:text-base handwritten font-semibold flex items-center gap-2 text-[#2c3e50]">
-                      <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <MapPin className="w-4 h-4" />
                       Location
                     </Label>
                     <Input
@@ -697,21 +727,21 @@ export default function AddMemoryPage() {
                       placeholder="Where were you?"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="handwritten text-sm sm:text-base bg-[#fef9f3] border-2 border-[#d4b896] rounded-xl px-3 sm:px-4 py-2 sm:py-3 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20"
+                      className="handwritten text-sm bg-[#fef9f3] border-2 border-[#d4b896] rounded-xl px-3 py-2 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20"
                     />
                   </div>
                 </div>
 
                 {/* Content Textarea */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <Label htmlFor="content" className="text-base sm:text-lg handwritten font-semibold text-[#2c3e50]">
                       Your Story
                     </Label>
                     <button
                       type="button"
                       onClick={toggleVoiceRecording}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
+                      className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all w-full sm:w-auto ${
                         isRecording 
                           ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
                           : 'bg-[#3498db] hover:bg-[#2980b9] text-white'
@@ -737,7 +767,7 @@ export default function AddMemoryPage() {
                       placeholder="Pour your heart out... What happened? How did you feel? (Or click the mic button to speak)"
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
-                      className="min-h-[300px] sm:min-h-[400px] resize-none bg-[#fef9f3] border-2 border-[#d4b896] text-base sm:text-lg handwritten leading-relaxed text-[#2c3e50] rounded-xl px-3 sm:px-4 py-3 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20"
+                      className="min-h-[250px] sm:min-h-[350px] resize-none bg-[#fef9f3] border-2 border-[#d4b896] text-base handwritten leading-relaxed text-[#2c3e50] rounded-xl px-3 py-3 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20"
                     />
                     {isRecording && (
                       <div className="absolute bottom-3 right-3 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full">
@@ -764,7 +794,7 @@ export default function AddMemoryPage() {
             <Button
               onClick={handleSave}
               disabled={isSaving || !title || !content || authLoading}
-              className="w-full h-12 sm:h-16 text-lg sm:text-xl handwritten font-bold relative overflow-hidden rounded-xl bg-gradient-to-r from-[#8b6f47] to-[#d4a574] hover:from-[#6d5638] hover:to-[#b8895d] shadow-lg hover:shadow-xl transition-all mt-6"
+              className="w-full h-12 sm:h-14 text-base sm:text-lg handwritten font-bold relative overflow-hidden rounded-xl bg-linear-to-r from-[#8b6f47] to-[#d4a574] hover:from-[#6d5638] hover:to-[#b8895d] shadow-lg hover:shadow-xl transition-all mt-4 sm:mt-6"
               size="lg"
             >
               {isSaving ? (
