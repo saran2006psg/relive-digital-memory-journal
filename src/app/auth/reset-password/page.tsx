@@ -1,18 +1,17 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { BookOpen, Lock, Eye, EyeOff, CheckCircle } from "lucide-react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { createBrowserClient } from "@supabase/ssr"
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -79,7 +78,7 @@ export default function ResetPasswordPage() {
 
   if (!validToken) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fef9f3] via-[#f8f3ed] to-[#f5ebe0] p-4">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-[#fef9f3] via-[#f8f3ed] to-[#f5ebe0] p-4">
         <Card className="w-full max-w-md p-8 bg-white/95 backdrop-blur-sm shadow-2xl border-2 border-[#d4b896]">
           <div className="text-center">
             <BookOpen className="w-16 h-16 text-[#8b6f47] mx-auto mb-4" />
@@ -101,7 +100,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fef9f3] via-[#f8f3ed] to-[#f5ebe0] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-[#fef9f3] via-[#f8f3ed] to-[#f5ebe0] p-4">
       <Card className="w-full max-w-md p-8 bg-white/95 backdrop-blur-sm shadow-2xl border-2 border-[#d4b896]">
         {/* Header */}
         <div className="text-center mb-8">
@@ -202,7 +201,7 @@ export default function ResetPasswordPage() {
             <Button
               type="submit"
               disabled={loading || !password || !confirmPassword}
-              className="w-full h-12 text-lg handwritten font-bold bg-gradient-to-r from-[#8b6f47] to-[#d4a574] hover:from-[#6d5638] hover:to-[#b8895d] shadow-lg"
+              className="w-full h-12 text-lg handwritten font-bold bg-linear-to-r from-[#8b6f47] to-[#d4a574] hover:from-[#6d5638] hover:to-[#b8895d] shadow-lg"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
@@ -230,5 +229,20 @@ export default function ResetPasswordPage() {
         )}
       </Card>
     </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-[#fef9f3] via-[#f8f3ed] to-[#f5ebe0]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#8b6f47] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-[#7f8c8d] handwritten">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   )
 }
