@@ -469,7 +469,9 @@ function TimelineContent() {
                       <div className="relative flex justify-center mb-8">
                         <button
                           onClick={() => {
-                            setSelectedYear(year)
+                            if (selectedYear !== year) {
+                              setSelectedYear(year)
+                            }
                             handleMonthClick(month)
                           }}
                           className="bg-[#d4a574] text-white px-6 py-1.5 rounded-full shadow-md z-10 transform hover:scale-105 transition-all duration-300 cursor-pointer"
@@ -483,9 +485,6 @@ function TimelineContent() {
                         const isLeft = memoryIndex % 2 === 0
                         const hasAudio = memory.media && memory.media.some(m => isAudioMedia(m))
                         memoryIndex++
-                        
-                        // Debug in DOM
-                        console.log(`Rendering ${memory.title} at index ${index} for ${month} ${year}`, memory.date)
 
                         return (
                   <div key={memory.id} className="relative mb-14" data-memory-title={memory.title} data-memory-date={memory.date}>
@@ -592,7 +591,7 @@ function TimelineContent() {
 
                           {/* Content Preview - Faded Ink */}
                           <p className="text-sm handwritten text-[#7f8c8d] mb-3 line-clamp-3 leading-relaxed italic">
-                            "{memory.content}"
+                            "{memory.content.replace(/<[^>]*>/g, '').substring(0, 150)}{memory.content.replace(/<[^>]*>/g, '').length > 150 ? '...' : ''}"
                           </p>
 
                           {/* Location - Map Pin Style */}
@@ -693,50 +692,50 @@ function TimelineContent() {
 
       {/* Detailed View Dialog */}
       {selectedMemory && (
-        <div className="fixed inset-0 z-50 bg-[#faf5ed] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-linear-to-br from-[#faf7f2] via-[#f5f0e8] to-[#ede5d8] overflow-y-auto">
           <div className="relative w-full min-h-screen">
+            
             {/* Close Button */}
             <button
               onClick={() => setSelectedMemory(null)}
-              className="fixed top-4 right-4 z-50 w-10 h-10 bg-white hover:bg-red-50 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 border-2 border-red-300"
+              className="fixed top-6 right-6 z-50 w-14 h-14 bg-white hover:bg-red-50 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 border-4 border-[#d4b896]"
             >
-              <X className="w-5 h-5 text-red-500" />
+              <X className="w-7 h-7 text-[#8b6f47]" />
             </button>
 
-            {/* Content Container - Grid Layout */}
-            <div className="w-full max-w-6xl mx-auto px-6 py-8 overflow-y-auto max-h-screen">
+            {/* Full Width Container */}
+            <div className="w-full h-full">
               
-              {/* Top Row: Title/Details Left, Tags & Audio Right */}
-              <div className="grid grid-cols-3 gap-4 mb-4">
+              {/* Diary Paper Container */}
+              <div className="bg-[#fef9f3] min-h-screen">
                 
-                {/* Left: Title & Details (2 columns width) */}
-                <div className="col-span-2 bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                    <h2 className="text-3xl handwritten font-bold text-[#2c3e50] leading-tight flex-1">
+                {/* Header with gradient brown */}
+                <div className="bg-linear-to-r from-[#a0826d] to-[#8b6f47] px-12 py-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <h2 className="text-4xl font-bold text-white leading-tight flex-1" style={{ fontFamily: 'Dancing Script, cursive' }}>
                       {selectedMemory.title}
                     </h2>
                     {selectedMemory.mood && (
                       <div 
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-md border-2 border-white shrink-0"
+                        className="w-16 h-16 rounded-full flex items-center justify-center text-4xl shadow-lg border-4 border-white shrink-0"
                         style={{ backgroundColor: selectedMemory.color }}
                       >
                         {selectedMemory.mood}
                       </div>
                     )}
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="w-4 h-4 text-[#8b6f47]" />
-                      <span className="handwritten font-medium text-[#2c3e50]">
+                  
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center gap-2 text-base text-white/90">
+                      <Calendar className="w-5 h-5" />
+                      <span style={{ fontFamily: 'Dancing Script, cursive' }}>
                         {selectedMemory.month} {selectedMemory.day}, {selectedMemory.year}
                       </span>
                     </div>
-
                     {selectedMemory.location && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="w-4 h-4 text-[#8b6f47]" />
-                        <span className="handwritten font-medium text-[#2c3e50]">
+                      <div className="flex items-center gap-2 text-base text-white/90">
+                        <MapPin className="w-5 h-5" />
+                        <span style={{ fontFamily: 'Dancing Script, cursive' }}>
                           {selectedMemory.location}
                         </span>
                       </div>
@@ -744,152 +743,87 @@ function TimelineContent() {
                   </div>
                 </div>
 
-                {/* Right: Tags (1 column width) */}
-                <div className="bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
-                  {selectedMemory.tags && selectedMemory.tags.length > 0 ? (
-                    <>
-                      <div className="flex items-center gap-2 mb-3">
-                        <Tag className="w-4 h-4 text-[#8b6f47]" />
-                        <h3 className="text-base handwritten font-bold text-[#8b6f47]">tags</h3>
+                {/* Content Area - Unruled */}
+                <div className="px-12 py-8 max-w-5xl mx-auto">
+                  {/* Tags Section */}
+                  {selectedMemory.tags && selectedMemory.tags.length > 0 && (
+                    <div className="mb-8">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Tag className="w-5 h-5 text-[#8b6f47]" />
+                        <h3 className="text-xl font-bold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Tags</h3>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-3">
                         {selectedMemory.tags.map((tag, idx) => (
                           <span
                             key={`${tag}-${idx}`}
-                            className="px-3 py-1 rounded-full text-xs handwritten font-semibold shadow-sm"
+                            className="px-4 py-2 rounded-full text-base font-semibold shadow-sm"
                             style={{
                               borderWidth: '2px',
                               borderStyle: 'solid',
                               borderColor: selectedMemory.color,
                               color: selectedMemory.color,
-                              backgroundColor: selectedMemory.color + '15'
+                              backgroundColor: selectedMemory.color + '15',
+                              fontFamily: 'Dancing Script, cursive'
                             }}
                           >
                             {tag}
                           </span>
                         ))}
                       </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-4 text-sm handwritten text-gray-400">No tags</div>
-                  )}
-                </div>
-              </div>
-
-              {/* Middle Row: Images Left, Audio Right (conditionally) */}
-              <div className={`grid gap-4 mb-4 ${selectedMemory.media && selectedMemory.media.filter(m => isAudioMedia(m)).length > 0 ? 'grid-cols-3' : 'grid-cols-1'}`}>
-                
-                {/* Left: Images (2 columns width if audio exists, full width otherwise) */}
-                <div className={`${selectedMemory.media && selectedMemory.media.filter(m => isAudioMedia(m)).length > 0 ? 'col-span-2' : 'col-span-1'} bg-white rounded-xl shadow-md overflow-hidden border-2 border-[#d4b896]/30`}>
-                  {selectedMemory.media && selectedMemory.media.filter(m => !isAudioMedia(m)).length > 0 ? (
-                    <div className="p-3">
-                      {selectedMemory.media.filter(m => !isAudioMedia(m)).length === 1 ? (
-                        <div className="w-full flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden" style={{ minHeight: '350px', maxHeight: '500px' }}>
-                          {selectedMemory.media.find(m => !isAudioMedia(m))!.media_type === 'video' ? (
-                            <video
-                              src={selectedMemory.media.find(m => !isAudioMedia(m))!.url}
-                              controls
-                              className="w-full h-full object-contain"
-                            >
-                              Your browser does not support the video tag.
-                            </video>
-                          ) : (
-                            <img
-                              src={
-                                isCloudinaryUrl(selectedMemory.media.find(m => !isAudioMedia(m))!.url)
-                                  ? getOptimizedImageUrl(selectedMemory.media.find(m => !isAudioMedia(m))!.url, {
-                                      width: 1200,
-                                      quality: 'auto:good',
-                                      format: 'auto',
-                                      crop: 'limit'
-                                    })
-                                  : selectedMemory.media.find(m => !isAudioMedia(m))!.url
-                              }
-                              alt={selectedMemory.title}
-                              className="max-w-full max-h-full object-contain"
-                            />
-                          )}
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-2 max-h-[500px] overflow-y-auto">
-                          {selectedMemory.media.filter(m => !isAudioMedia(m)).map((media, idx) => (
-                            <div key={media.id} className="relative overflow-hidden rounded-lg bg-gray-50" style={{ minHeight: '200px' }}>
-                              {media.media_type === 'video' ? (
-                                <video
-                                  src={media.url}
-                                  controls
-                                  className="w-full h-full object-contain"
-                                >
-                                  Your browser does not support the video tag.
-                                </video>
-                              ) : (
-                                <img
-                                  src={
-                                    isCloudinaryUrl(media.url)
-                                      ? getOptimizedImageUrl(media.url, {
-                                          width: 600,
-                                          quality: 'auto:good',
-                                          format: 'auto',
-                                          crop: 'limit'
-                                        })
-                                      : media.url
-                                  }
-                                  alt={`${selectedMemory.title} - ${idx + 1}`}
-                                  className="w-full h-full object-contain hover:scale-105 transition-transform duration-300 cursor-pointer p-2"
-                                />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-[350px]">
-                      <div className="text-center">
-                        <BookOpen className="w-12 h-12 text-[#d4b896] mx-auto mb-2" />
-                        <p className="text-sm handwritten text-[#7f8c8d]">No images</p>
-                      </div>
                     </div>
                   )}
-                </div>
 
-                {/* Right: Audio (1 column width) - Only show if audio exists */}
-                {selectedMemory.media && selectedMemory.media.filter(m => isAudioMedia(m)).length > 0 && (
-                  <div className="bg-white rounded-xl shadow-md border-2 border-[#d4b896]/30 overflow-hidden flex flex-col">
-                    <div className="bg-linear-to-r from-[#8b6f47]/10 to-transparent px-4 py-3 border-b border-[#d4b896]/20">
-                      <div className="flex items-center gap-2">
-                        <Mic className="w-4 h-4 text-[#8b6f47]" />
-                        <h3 className="text-sm handwritten font-bold text-[#8b6f47]">audio</h3>
+                  {/* Audio Section */}
+                  {selectedMemory.media && selectedMemory.media.filter(m => isAudioMedia(m)).length > 0 && (
+                    <div className="mb-8">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Mic className="w-5 h-5 text-[#8b6f47]" />
+                        <h3 className="text-xl font-bold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Audio Recordings</h3>
                       </div>
-                    </div>
-                    <div className="p-4 flex-1 flex flex-col justify-center">
-                      {selectedMemory.media.filter(m => isAudioMedia(m)).map((audio) => (
-                        <div key={audio.id} className="w-full">
+                      <div className="space-y-4">
+                        {selectedMemory.media.filter(m => isAudioMedia(m)).map((audio) => (
                           <audio 
+                            key={audio.id}
                             src={audio.url} 
                             controls 
                             preload="metadata"
                             className="w-full" 
-                            style={{ height: '40px', maxHeight: '40px' }} 
                           />
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
+                  )}
+
+                  {/* Story Content */}
+                  <div className="mb-8">
+                    <div className="flex items-center gap-2 mb-4">
+                      <BookOpen className="w-6 h-6 text-[#8b6f47]" />
+                      <h3 className="text-2xl font-bold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Your Story</h3>
+                    </div>
+                    <div 
+                      className="prose prose-lg max-w-none text-lg text-[#34495e] leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: selectedMemory.content }}
+                      style={{
+                        fontFamily: 'Dancing Script, cursive',
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word'
+                      }}
+                    />
                   </div>
-                )}
-              </div>
-
-              {/* Bottom Row: Your Story (Full Width) */}
-              <div className="bg-white rounded-xl shadow-md p-6 border-2 border-[#d4b896]/30">
-                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#d4b896]/20">
-                  <BookOpen className="w-5 h-5 text-[#8b6f47]" />
-                  <h3 className="text-lg handwritten font-bold text-[#8b6f47]">your story</h3>
                 </div>
-                <p className="text-base handwritten text-[#34495e] leading-relaxed whitespace-pre-wrap">
-                  {selectedMemory.content}
-                </p>
-              </div>
 
+                {/* Footer */}
+                <div className="px-12 py-4 bg-[#f5f0e8]">
+                  <p className="text-sm text-[#8b6f47] text-center" style={{ fontFamily: 'Dancing Script, cursive' }}>
+                    Created on {new Date(selectedMemory.created_at).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+
+              </div>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { extractAndStoreMedia } from '@/lib/media-parser'
 
 // GET single memory
 export async function GET(
@@ -94,6 +95,9 @@ export async function PUT(
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    // Extract and store media from updated content (delete old media first)
+    await extractAndStoreMedia(supabase, id, content, true)
 
     return NextResponse.json({ memory: data })
   } catch (err: any) {

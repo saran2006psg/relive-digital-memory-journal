@@ -377,6 +377,113 @@
   .doodle-star {
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
   }
+
+  /* Rendered content styles for memory display */
+  .prose {
+    font-family: var(--font-script);
+  }
+
+  .prose p {
+    margin-bottom: 1em;
+    line-height: 1.8;
+  }
+
+  .prose img {
+    max-width: 400px;
+    height: auto;
+    border-radius: 8px;
+    margin: 1rem 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .prose video {
+    max-width: 500px;
+    height: auto;
+    border-radius: 8px;
+    margin: 1rem 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .prose audio {
+    width: 100%;
+    max-width: 400px;
+    margin: 1rem 0;
+  }
+
+  .prose h1 {
+    font-size: 2em;
+    font-weight: 700;
+    margin-bottom: 0.5em;
+    color: #8b6f47;
+  }
+
+  .prose h2 {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin-bottom: 0.5em;
+    color: #8b6f47;
+  }
+
+  .prose h3 {
+    font-size: 1.25em;
+    font-weight: 600;
+    margin-bottom: 0.5em;
+    color: #8b6f47;
+  }
+
+  .prose strong {
+    font-weight: 700;
+  }
+
+  .prose em {
+    font-style: italic;
+  }
+
+  .prose u {
+    text-decoration: underline;
+  }
+
+  .prose s {
+    text-decoration: line-through;
+  }
+
+  .prose code {
+    background-color: #f5f5f5;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+
+  .prose mark {
+    background-color: #fef3c7;
+    padding: 0.1em 0.2em;
+  }
+
+  .prose ul {
+    list-style-type: disc;
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+  }
+
+  .prose ol {
+    list-style-type: decimal;
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+  }
+
+  .prose li {
+    margin-bottom: 0.5em;
+  }
+
+  .prose a {
+    color: #3498db;
+    text-decoration: underline;
+  }
+
+  .prose a:hover {
+    color: #2980b9;
+  }
 }
 
 /* Hide Next.js error overlay portal */

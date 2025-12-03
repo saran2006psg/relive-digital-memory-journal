@@ -397,7 +397,7 @@ export default function GalleryPage() {
                   >
                     {/* Polaroid Card */}
                     <div
-                      className="bg-[#f5f0e8] p-4 pb-16 shadow-2xl cursor-pointer group hover:shadow-3xl transition-all duration-300 hover:scale-105 hover:rotate-0 relative"
+                      className="bg-[#f5f0e8] p-4 pb-20 shadow-2xl cursor-pointer group hover:shadow-3xl transition-all duration-300 hover:scale-105 hover:rotate-0 relative"
                       onClick={() => setSelectedItem(item)}
                     >
                       {/* Photo Container */}
@@ -472,6 +472,15 @@ export default function GalleryPage() {
                           </div>
                         )}
 
+                        {/* Content Preview */}
+                        <div className="mt-3 px-2">
+                          <div className="bg-white/60 rounded-lg p-3 border border-[#d4b896]/30">
+                            <p className="text-sm handwritten text-[#34495e] leading-relaxed line-clamp-3 text-center" style={{ fontFamily: 'Dancing Script, cursive' }}>
+                              {item.content.replace(/<[^>]*>/g, '').substring(0, 120)}{item.content.replace(/<[^>]*>/g, '').length > 120 ? '...' : ''}
+                            </p>
+                          </div>
+                        </div>
+
                         {/* Tags with colored borders */}
                         {item.tags && item.tags.length > 0 && (
                           <div className="flex flex-wrap gap-2 justify-center pt-2">
@@ -541,47 +550,89 @@ export default function GalleryPage() {
         )}
       </div>
 
-      {/* Full-Page Modal Overlay */}
+      {/* Full-Page Modal Overlay - Diary Theme */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 bg-[#faf5ed] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-linear-to-br from-[#faf7f2] via-[#f5f0e8] to-[#ede5d8] overflow-y-auto">
           <div className="relative w-full min-h-screen">
-            {/* Close Button */}
-            <button
-              onClick={() => {
-                setSelectedItem(null)
-                setIsEditing(false)
-              }}
-              className="fixed top-4 right-4 z-50 w-10 h-10 bg-white hover:bg-red-50 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 border-2 border-red-300"
-            >
-              <X className="w-5 h-5 text-red-500" />
-            </button>
+            
+            {/* Action Buttons - Top Right */}
+            <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
+              {/* Edit Button */}
+              {!isEditing && (
+                <button
+                  onClick={handleEdit}
+                  className="w-12 h-12 bg-white hover:bg-blue-50 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 border-4 border-[#3498db]"
+                  title="Edit memory"
+                >
+                  <Edit2 className="w-5 h-5 text-[#3498db]" />
+                </button>
+              )}
 
-            {/* Edit Button */}
-            {!isEditing && (
+              {/* Delete Button */}
+              {!isEditing && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-12 h-12 bg-white hover:bg-red-50 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 border-4 border-red-500"
+                  title="Delete memory"
+                >
+                  <Trash2 className="w-5 h-5 text-red-500" />
+                </button>
+              )}
+
+              {/* Close Button */}
               <button
-                onClick={handleEdit}
-                className="fixed top-4 right-28 z-50 w-10 h-10 bg-white hover:bg-blue-50 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 border-2 border-blue-300"
-                title="Edit memory"
+                onClick={() => {
+                  setSelectedItem(null)
+                  setIsEditing(false)
+                }}
+                className="w-12 h-12 bg-white hover:bg-red-50 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 border-4 border-[#d4b896]"
               >
-                <Edit2 className="w-5 h-5 text-blue-500" />
+                <X className="w-6 h-6 text-[#8b6f47]" />
               </button>
-            )}
+            </div>
 
-            {/* Delete Button */}
-            {!isEditing && (
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="fixed top-4 right-16 z-50 w-10 h-10 bg-white hover:bg-red-50 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 border-2 border-red-300"
-                title="Delete memory"
-              >
-                <Trash2 className="w-5 h-5 text-red-500" />
-              </button>
-            )}
-
-            {/* Content Container - Grid Layout */}
-            <div className="w-full max-w-6xl mx-auto px-6 py-8 overflow-y-auto max-h-screen">
+            {/* Main Content Container - Centered Diary Style */}
+            <div className="w-full h-full">
               
-              {isEditing ? (
+              {/* Diary Paper Container */}
+              <div className="bg-[#fef9f3] min-h-screen">
+                
+                {/* Header - Vintage Style */}
+                <div className="bg-linear-to-r from-[#a0826d] to-[#8b6f47] px-8 py-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-6 h-6 text-[#fef9f3]" />
+                      <span className="text-2xl handwritten font-bold text-[#fef9f3]" style={{ fontFamily: 'Dancing Script, cursive' }}>
+                        {new Date(selectedItem.date).toLocaleDateString('en-US', { 
+                          weekday: 'long',
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </span>
+                    </div>
+                    
+                    {selectedItem.mood && (
+                      <div 
+                        className="w-16 h-16 rounded-full flex items-center justify-center text-4xl shadow-lg border-4 border-white"
+                        style={{ backgroundColor: moodColors[selectedItem.mood] || '#B5D99C' }}
+                      >
+                        {selectedItem.mood}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {selectedItem.location && (
+                    <div className="flex items-center gap-2 mt-3">
+                      <MapPin className="w-5 h-5 text-[#fef9f3]" />
+                      <span className="text-lg handwritten text-[#fef9f3]" style={{ fontFamily: 'Dancing Script, cursive' }}>{selectedItem.location}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Content Area - Unruled */}
+                <div className="px-12 py-8 max-w-5xl mx-auto">
+                  {isEditing ? (
                 /* Edit Mode */
                 <div className="space-y-4">
                   {/* Edit Form Header */}
@@ -699,209 +750,116 @@ export default function GalleryPage() {
                   </div>
                 </div>
               ) : (
-                /* View Mode */
-                <>
-              {/* Top Row: Title/Details Left, Tags Right */}
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                
-                {/* Left: Title & Details (2 columns width) */}
-                <div className="col-span-2 bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                    <h2 className="text-3xl handwritten font-bold text-[#2c3e50] leading-tight flex-1">
+                /* View Mode - Diary Style */
+                <div className="space-y-8">
+                  
+                  {/* Title */}
+                  <div className="border-b-2 border-[#d4b896]/30 pb-6">
+                    <h1 className="text-5xl handwritten font-bold text-[#2c3e50] leading-tight" style={{ fontFamily: 'Dancing Script, cursive' }}>
                       {selectedItem.title}
-                    </h2>
-                    {selectedItem.mood && (
-                      <div 
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-md border-2 border-white shrink-0"
-                        style={{ 
-                          backgroundColor: selectedItem.mood 
-                            ? moodColors[selectedItem.mood] || '#B5D99C' 
-                            : '#B5D99C' 
-                        }}
-                      >
-                        {selectedItem.mood}
-                      </div>
-                    )}
+                    </h1>
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="w-4 h-4 text-[#8b6f47]" />
-                      <span className="handwritten font-medium text-[#2c3e50]">
-                        {new Date(selectedItem.date).toLocaleDateString('en-US', { 
-                          weekday: 'long',
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
-                      </span>
-                    </div>
-
-                    {selectedItem.location && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="w-4 h-4 text-[#8b6f47]" />
-                        <span className="handwritten font-medium text-[#2c3e50]">
-                          {selectedItem.location}
+                  {/* Tags */}
+                  {selectedItem.tags && selectedItem.tags.length > 0 && (
+                    <div className="bg-linear-to-r from-[#fef9f3] to-[#f5f0e8] rounded-xl p-6 border-2 border-[#d4b896]/30 shadow-sm">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Tag className="w-5 h-5 text-[#8b6f47]" />
+                        <h3 className="text-lg handwritten font-bold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Tags</h3>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                      {selectedItem.tags.map((tag, idx) => (
+                        <span
+                          key={`${tag}-${idx}`}
+                          className="px-4 py-2 rounded-full text-base handwritten font-semibold border-2 shadow-sm hover:shadow-md transition-shadow"
+                          style={{
+                            borderColor: selectedItem.mood 
+                              ? moodColors[selectedItem.mood] || '#3498db'
+                              : '#3498db',
+                            color: selectedItem.mood 
+                              ? moodColors[selectedItem.mood] || '#3498db'
+                              : '#3498db',
+                            backgroundColor: selectedItem.mood 
+                              ? (moodColors[selectedItem.mood] || '#3498db') + '15'
+                              : '#3498db' + '15',
+                            fontFamily: 'Dancing Script, cursive'
+                          }}
+                        >
+                          # {tag}
                         </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Right: Tags (1 column width) */}
-                <div className="bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
-                  {selectedItem.tags && selectedItem.tags.length > 0 ? (
-                    <>
-                      <div className="flex items-center gap-2 mb-3">
-                        <Tag className="w-4 h-4 text-[#8b6f47]" />
-                        <h3 className="text-base handwritten font-bold text-[#8b6f47]">tags</h3>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedItem.tags.map((tag, idx) => (
-                          <span
-                            key={`${tag}-${idx}`}
-                            className="px-3 py-1 rounded-full text-xs handwritten font-semibold shadow-sm"
-                            style={{
-                              borderWidth: '2px',
-                              borderStyle: 'solid',
-                              borderColor: selectedItem.mood 
-                                ? moodColors[selectedItem.mood] || '#d4a574'
-                                : '#d4a574',
-                              color: selectedItem.mood 
-                                ? moodColors[selectedItem.mood] || '#8b6f47'
-                                : '#8b6f47',
-                              backgroundColor: selectedItem.mood 
-                                ? (moodColors[selectedItem.mood] || '#d4a574') + '15'
-                                : '#d4a574' + '15'
-                            }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-4 text-sm handwritten text-gray-400">No tags</div>
-                  )}
-                </div>
-              </div>
-
-              {/* Middle Row: Images Left, Audio Right (conditionally) */}
-              <div className={`grid gap-4 mb-4 ${selectedItem.media && selectedItem.media.filter(m => isAudioMedia(m)).length > 0 ? 'grid-cols-3' : 'grid-cols-1'}`}>
-                
-                {/* Left: Images (2 columns width if audio exists, full width otherwise) */}
-                <div className={`${selectedItem.media && selectedItem.media.filter(m => isAudioMedia(m)).length > 0 ? 'col-span-2' : 'col-span-1'} bg-white rounded-xl shadow-md overflow-hidden border-2 border-[#d4b896]/30`}>
-                  {selectedItem.media && selectedItem.media.filter(m => !isAudioMedia(m)).length > 0 ? (
-                    <div className="p-3">
-                      {selectedItem.media.filter(m => !isAudioMedia(m)).length === 1 ? (
-                        <div className="w-full flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden" style={{ minHeight: '350px', maxHeight: '500px' }}>
-                          {selectedItem.media.find(m => !isAudioMedia(m))!.media_type === 'video' ? (
-                            <video
-                              src={selectedItem.media.find(m => !isAudioMedia(m))!.url}
-                              controls
-                              className="w-full h-full object-contain"
-                            >
-                              Your browser does not support the video tag.
-                            </video>
-                          ) : (
-                            <img
-                              src={
-                                isCloudinaryUrl(selectedItem.media.find(m => !isAudioMedia(m))!.url)
-                                  ? getOptimizedImageUrl(selectedItem.media.find(m => !isAudioMedia(m))!.url, {
-                                      width: 1200,
-                                      quality: 'auto:good',
-                                      format: 'auto',
-                                      crop: 'limit'
-                                    })
-                                  : selectedItem.media.find(m => !isAudioMedia(m))!.url
-                              }
-                              alt={selectedItem.title}
-                              className="max-w-full max-h-full object-contain"
-                            />
-                          )}
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-2 max-h-[500px] overflow-y-auto">
-                          {selectedItem.media.filter(m => !isAudioMedia(m)).map((media, idx) => (
-                            <div key={media.id} className="relative overflow-hidden rounded-lg bg-gray-50" style={{ minHeight: '200px' }}>
-                              {media.media_type === 'video' ? (
-                                <video
-                                  src={media.url}
-                                  controls
-                                  className="w-full h-full object-contain"
-                                >
-                                  Your browser does not support the video tag.
-                                </video>
-                              ) : (
-                                <img
-                                  src={
-                                    isCloudinaryUrl(media.url)
-                                      ? getOptimizedImageUrl(media.url, {
-                                          width: 600,
-                                          quality: 'auto:good',
-                                          format: 'auto',
-                                          crop: 'limit'
-                                        })
-                                      : media.url
-                                  }
-                                  alt={`${selectedItem.title} - ${idx + 1}`}
-                                  className="w-full h-full object-contain hover:scale-105 transition-transform duration-300 cursor-pointer p-2"
-                                />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-[350px]">
-                      <div className="text-center">
-                        <BookOpen className="w-12 h-12 text-[#d4b896] mx-auto mb-2" />
-                        <p className="text-sm handwritten text-[#7f8c8d]">No images</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right: Audio (1 column width) - Only show if audio exists */}
-                {selectedItem.media && selectedItem.media.filter(m => isAudioMedia(m)).length > 0 && (
-                  <div className="bg-white rounded-xl shadow-md border-2 border-[#d4b896]/30 overflow-hidden flex flex-col">
-                    <div className="bg-linear-to-r from-[#8b6f47]/10 to-transparent px-4 py-3 border-b border-[#d4b896]/20">
-                      <div className="flex items-center gap-2">
-                        <Mic className="w-4 h-4 text-[#8b6f47]" />
-                        <h3 className="text-sm handwritten font-bold text-[#8b6f47]">audio</h3>
-                      </div>
-                    </div>
-                    <div className="p-4 flex-1 flex flex-col justify-center">
-                      {selectedItem.media.filter(m => isAudioMedia(m)).map((audio) => (
-                        <div key={audio.id} className="w-full">
-                          <audio 
-                            src={audio.url} 
-                            controls 
-                            preload="metadata"
-                            className="w-full" 
-                            style={{ height: '40px', maxHeight: '40px' }} 
-                          />
-                        </div>
                       ))}
                     </div>
-                  </div>
-                )}
-              </div>
+                    </div>
+                  )}
 
-              {/* Bottom Row: Your Story (Full Width) */}
-              <div className="bg-white rounded-xl shadow-md p-6 border-2 border-[#d4b896]/30">
-                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#d4b896]/20">
-                  <BookOpen className="w-5 h-5 text-[#8b6f47]" />
-                  <h3 className="text-lg handwritten font-bold text-[#8b6f47]">your story</h3>
+                  {/* Content with Rich Media */}
+                  <div className="bg-white/50 rounded-xl p-8 border-2 border-[#d4b896]/20">
+                    <div className="flex items-center gap-3 mb-6 pb-3 border-b border-[#d4b896]/30">
+                      <BookOpen className="w-6 h-6 text-[#8b6f47]" />
+                      <h3 className="text-2xl handwritten font-bold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Your Story</h3>
+                    </div>
+                    <div 
+                      className="prose prose-xl max-w-none handwritten text-[#34495e] leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: selectedItem.content }}
+                      style={{
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word',
+                        fontFamily: 'Dancing Script, cursive',
+                        fontSize: '1.25rem',
+                        lineHeight: '2rem'
+                      }}
+                    />
+                  </div>
+
+                  {/* Audio Section */}
+                  {selectedItem.media && selectedItem.media.filter(m => isAudioMedia(m)).length > 0 && (
+                    <div className="bg-linear-to-br from-[#f5f0e8] to-[#fef9f3] rounded-xl p-6 border-2 border-[#d4b896]/30 shadow-sm">
+                      <div className="flex items-center gap-3 mb-5 pb-3 border-b border-[#d4b896]/30">
+                        <Mic className="w-6 h-6 text-[#8b6f47]" />
+                        <h3 className="text-2xl handwritten font-bold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Audio Recordings</h3>
+                      </div>
+                      <div className="space-y-4">
+                        {selectedItem.media.filter(m => isAudioMedia(m)).map((audio, idx) => (
+                          <div key={audio.id} className="bg-white p-5 rounded-xl border-2 border-[#d4b896]/40 shadow-md hover:shadow-lg transition-shadow">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-10 h-10 bg-[#8b6f47]/10 rounded-full flex items-center justify-center">
+                                <Mic className="w-5 h-5 text-[#8b6f47]" />
+                              </div>
+                              <span className="text-sm handwritten font-semibold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Recording {idx + 1}</span>
+                            </div>
+                            <audio 
+                              src={audio.url} 
+                              controls 
+                              preload="metadata"
+                              className="w-full"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <p className="text-base handwritten text-[#34495e] leading-relaxed whitespace-pre-wrap">
-                  {selectedItem.content}
-                </p>
-              </div>
-                </>
               )}
             </div>
+
+            {/* Footer */}
+            <div className="bg-linear-to-r from-[#f5f0e8] via-[#fef9f3] to-[#f5f0e8] border-t-2 border-[#d4b896]/50 px-12 py-5">
+              <div className="flex items-center justify-center gap-2">
+                <Calendar className="w-4 h-4 text-[#8b6f47]" />
+                <p className="text-base handwritten text-[#8b6f47] font-medium" style={{ fontFamily: 'Dancing Script, cursive' }}>
+                  Created on {new Date(selectedItem.created_at).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+            </div>
+
+          </div>
+          </div>
           </div>
         </div>
       )}
@@ -935,6 +893,53 @@ export default function GalleryPage() {
                 onClick={handleDelete}
                 disabled={isDeleting}
                 className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg handwritten font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-60 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border-4 border-red-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-2xl handwritten font-bold text-[#2c3e50]">
+                Delete Memory?
+              </h3>
+            </div>
+
+            <p className="text-base handwritten text-[#7f8c8d] mb-6">
+              Are you sure you want to delete this memory? This action cannot be undone.
+            </p>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg handwritten font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-6 py-3 bg-red-500 text-white rounded-lg handwritten font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
               >
                 {isDeleting ? (
                   <>

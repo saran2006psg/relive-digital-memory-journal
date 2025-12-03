@@ -18,10 +18,10 @@ export default function Home() {
       <div className="absolute inset-0 bg-[url('/notebook-pattern.svg')] opacity-5" />
       
       <div className="absolute inset-0 pointer-events-none">
-        <div className="container mx-auto h-full relative">
-          <div className="absolute inset-0 flex flex-col justify-start pt-32">
-            {[...Array(20)].map((_, i) => (
-              <div key={i} className="h-12 border-b border-[#d4b896]/20" />
+        <div className="h-full relative">
+          <div className="absolute inset-0 flex flex-col justify-start">
+            {[...Array(30)].map((_, i) => (
+              <div key={i} className="h-12 border-b border-blue-400/20" />
             ))}
           </div>
         </div>

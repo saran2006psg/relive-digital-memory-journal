@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { extractAndStoreMedia } from '@/lib/media-parser'
 
 // GET all memories for authenticated user
 export async function GET(request: NextRequest) {
@@ -141,6 +142,9 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    // Parse HTML content and extract media URLs
+    await extractAndStoreMedia(supabase, memory.id, content)
 
     // Handle tags if provided
     if (tags && Array.isArray(tags) && tags.length > 0) {

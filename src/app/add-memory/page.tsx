@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Calendar, MapPin, Image as ImageIcon, Video, X, Save, BookOpen, ArrowLeft, Maximize2, Mic, MicOff, ChevronDown } from "lucide-react"
+import { Calendar, MapPin, Image as ImageIcon, Video, X, Save, BookOpen, ArrowLeft, Maximize2, Mic, MicOff, ChevronDown, Type } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import { UserMenu } from "@/components/UserMenu"
 import { MobileNav } from "@/components/MobileNav"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { createBrowserClient } from "@supabase/ssr"
+import { TiptapEditor } from "@/components/TiptapEditor"
 
 const moodEmojis = [
   { emoji: "😊", label: "Happy", color: "#B5D99C" },
@@ -35,6 +36,10 @@ const tagSuggestions = ["Family", "Friends", "Travel", "Work", "Love", "Adventur
 export default function AddMemoryPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useSupabaseAuth()
+  
+  // Mode state
+  const [mode, setMode] = useState<'quick' | 'diary'>('quick')
+  
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [selectedMood, setSelectedMood] = useState<string | null>(null)
@@ -55,6 +60,48 @@ export default function AddMemoryPage() {
   const [isMobile, setIsMobile] = useState(false)
   const recognitionRef = useRef<any>(null)
   
+  // Diary mode - content blocks (Notion-like)
+  type ContentBlock = {
+    id: string
+    type: 'text' | 'image' | 'video' | 'audio'
+    content: string
+    file?: File
+    preview?: string
+    width?: number // for resizable images
+  }
+  const [diaryBlocks, setDiaryBlocks] = useState<ContentBlock[]>([
+    { id: '1', type: 'text', content: '' }
+  ])
+  const [focusedBlockId, setFocusedBlockId] = useState<string | null>(null)
+  const [resizingImage, setResizingImage] = useState<{ id: string; startWidth: number; startX: number } | null>(null)
+  const [showSlashMenu, setShowSlashMenu] = useState(false)
+  const [slashMenuPosition, setSlashMenuPosition] = useState({ top: 0, left: 0 })
+  const [currentSlashBlockId, setCurrentSlashBlockId] = useState<string | null>(null)
+  
+  // Handle image resize on mouse move
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (resizingImage) {
+        const deltaX = e.clientX - resizingImage.startX
+        const newWidth = resizingImage.startWidth + deltaX
+        resizeImage(resizingImage.id, newWidth)
+      }
+    }
+
+    const handleMouseUp = () => {
+      setResizingImage(null)
+    }
+
+    if (resizingImage) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [resizingImage])
+  
   // Audio recording states
   const [isRecordingAudio, setIsRecordingAudio] = useState(false)
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
@@ -73,6 +120,137 @@ export default function AddMemoryPage() {
 
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove))
+  }
+
+  // Diary mode block functions
+  const addBlock = (afterBlockId: string, type: 'text' | 'image' | 'video' | 'audio', file?: File, preview?: string) => {
+    const newBlock: ContentBlock = {
+      id: Date.now().toString(),
+      type,
+      content: '',
+      file,
+      preview,
+      width: type === 'image' ? 600 : undefined
+    }
+    
+    const index = diaryBlocks.findIndex(b => b.id === afterBlockId)
+    const newBlocks = [...diaryBlocks]
+    newBlocks.splice(index + 1, 0, newBlock)
+    setDiaryBlocks(newBlocks)
+    
+    // Focus on new text block if applicable
+    if (type === 'text') {
+      setTimeout(() => setFocusedBlockId(newBlock.id), 0)
+    }
+  }
+
+  const updateBlock = (blockId: string, content: string) => {
+    setDiaryBlocks(blocks =>
+      blocks.map(block =>
+        block.id === blockId ? { ...block, content } : block
+      )
+    )
+  }
+
+  const deleteBlock = (blockId: string) => {
+    if (diaryBlocks.length === 1) return // Keep at least one block
+    setDiaryBlocks(blocks => blocks.filter(block => block.id !== blockId))
+  }
+
+  const handleDiaryImageUpload = (e: React.ChangeEvent<HTMLInputElement>, afterBlockId?: string) => {
+    const files = e.target.files
+    if (!files) return
+    
+    const targetBlockId = afterBlockId || diaryBlocks[diaryBlocks.length - 1].id
+    
+    Array.from(files).forEach(file => {
+      const preview = URL.createObjectURL(file)
+      const type = file.type.startsWith('video/') ? 'video' : 'image'
+      addBlock(targetBlockId, type, file, preview)
+    })
+  }
+
+  const resizeImage = (blockId: string, newWidth: number) => {
+    setDiaryBlocks(blocks =>
+      blocks.map(block =>
+        block.id === blockId ? { ...block, width: Math.max(200, Math.min(newWidth, 800)) } : block
+      )
+    )
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent, blockId: string) => {
+    const block = diaryBlocks.find(b => b.id === blockId)
+    
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      if (showSlashMenu) {
+        setShowSlashMenu(false)
+        return
+      }
+      addBlock(blockId, 'text')
+    }
+    
+    if (e.key === 'Backspace') {
+      if (block && block.content === '' && diaryBlocks.length > 1) {
+        e.preventDefault()
+        deleteBlock(blockId)
+        const index = diaryBlocks.findIndex(b => b.id === blockId)
+        if (index > 0) {
+          setFocusedBlockId(diaryBlocks[index - 1].id)
+        }
+      }
+    }
+    
+    if (e.key === 'Escape' && showSlashMenu) {
+      setShowSlashMenu(false)
+    }
+  }
+  
+  const handleTextChange = (blockId: string, value: string) => {
+    // Check for slash command
+    if (value.endsWith('/')) {
+      setShowSlashMenu(true)
+      setCurrentSlashBlockId(blockId)
+      // Get cursor position for menu placement
+      const textarea = document.getElementById(`block-${blockId}`) as HTMLTextAreaElement
+      if (textarea) {
+        const rect = textarea.getBoundingClientRect()
+        setSlashMenuPosition({
+          top: rect.bottom + window.scrollY,
+          left: rect.left + window.scrollX
+        })
+      }
+    } else if (showSlashMenu && !value.includes('/')) {
+      setShowSlashMenu(false)
+    }
+    
+    updateBlock(blockId, value)
+  }
+  
+  const handleSlashCommand = (command: 'image' | 'video' | 'audio') => {
+    if (!currentSlashBlockId) return
+    
+    // Remove the / from the text
+    const block = diaryBlocks.find(b => b.id === currentSlashBlockId)
+    if (block) {
+      updateBlock(currentSlashBlockId, block.content.slice(0, -1))
+    }
+    
+    // Trigger file upload based on command
+    if (command === 'image') {
+      document.getElementById('diary-image-upload')?.click()
+    } else if (command === 'video') {
+      document.getElementById('diary-video-upload')?.click()
+    } else if (command === 'audio') {
+      if (isRecordingAudio) {
+        stopAudioRecording()
+      } else {
+        startAudioRecording()
+      }
+    }
+    
+    setShowSlashMenu(false)
+    setCurrentSlashBlockId(null)
   }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,6 +283,23 @@ export default function AddMemoryPage() {
     
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // Close slash menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showSlashMenu) {
+        const menu = document.getElementById('slash-menu')
+        if (menu && !menu.contains(e.target as Node)) {
+          setShowSlashMenu(false)
+        }
+      }
+    }
+    
+    if (showSlashMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showSlashMenu])
 
   // Initialize speech recognition
   useEffect(() => {
@@ -238,8 +433,8 @@ export default function AddMemoryPage() {
       return
     }
 
-    if (!title.trim() || !content.trim()) {
-      setError("Title and content are required")
+    if (!title.trim() && !content.trim()) {
+      setError("Please add a title or content for your memory")
       return
     }
 
@@ -269,6 +464,10 @@ export default function AddMemoryPage() {
 
       // 1. Create the memory
       setSavingStep("Creating memory in database...")
+      
+      // Content is already HTML from Tiptap editor
+      const finalContent = content.trim() || '<p></p>'
+      
       const memoryResponse = await fetch('/api/memories', {
         method: 'POST',
         headers: {
@@ -276,8 +475,8 @@ export default function AddMemoryPage() {
           'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
-          title: title.trim(),
-          content: content.trim(),
+          title: title.trim() || 'Untitled Entry',
+          content: finalContent,
           date,
           location: location.trim() || null,
           mood: selectedMood || null,
@@ -293,81 +492,14 @@ export default function AddMemoryPage() {
       const { memory } = await memoryResponse.json()
       await new Promise(resolve => setTimeout(resolve, 300))
       setCompletedSteps(prev => [...prev, "Memory created ✓"])
-      setUploadProgress(30)
-
-      // 2. Upload files if any (photos/videos)
-      let totalUploads = uploadedFiles.length
-      if (audioBlob) totalUploads += 1
-
-      let uploadedCount = 0
-
-      if (uploadedFiles.length > 0) {
-        setSavingStep(`Uploading media files (0/${uploadedFiles.length})...`)
-        
-        for (let i = 0; i < uploadedFiles.length; i++) {
-          const file = uploadedFiles[i]
-          const formData = new FormData()
-          formData.append('file', file)
-          formData.append('memoryId', memory.id)
-
-          setSavingStep(`Uploading media files (${i + 1}/${uploadedFiles.length})...`)
-          
-          const uploadResponse = await fetch('/api/upload', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`
-            },
-            body: formData
-          })
-
-          if (!uploadResponse.ok) {
-            console.error(`Failed to upload file ${i + 1}`)
-          }
-
-          uploadedCount++
-          setUploadProgress(30 + (uploadedCount / totalUploads) * 50)
-        }
-        
-        setCompletedSteps(prev => [...prev, `${uploadedFiles.length} media file(s) uploaded ✓`])
-      }
-
-      // 3. Upload audio if any
-      if (audioBlob) {
-        setSavingStep("Uploading audio recording...")
-        const audioFile = new File([audioBlob], `audio-${Date.now()}.webm`, { type: 'audio/webm' })
-        const formData = new FormData()
-        formData.append('file', audioFile)
-        formData.append('memoryId', memory.id)
-
-        const uploadResponse = await fetch('/api/upload', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          },
-          body: formData
-        })
-
-        if (!uploadResponse.ok) {
-          console.error('Failed to upload audio')
-        }
-
-        uploadedCount++
-        setUploadProgress(30 + (uploadedCount / totalUploads) * 50)
-        setCompletedSteps(prev => [...prev, "Audio recording uploaded ✓"])
-      }
-
-      // Final step
-      setSavingStep("Finalizing...")
-      await new Promise(resolve => setTimeout(resolve, 300))
       setUploadProgress(100)
-      setCompletedSteps(prev => [...prev, "Memory saved successfully! ✓"])
 
-      // Success! Clean up and redirect
-      uploadPreviews.forEach(url => URL.revokeObjectURL(url))
+      // Success!
+      setSavingStep("Memory saved successfully! ✨")
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
-      setTimeout(() => {
-        router.push('/gallery')
-      }, 1500)
+      // Redirect to dashboard
+      router.push('/dashboard')
 
     } catch (error: any) {
       console.error('Error saving memory:', error)
@@ -380,10 +512,10 @@ export default function AddMemoryPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-linear-to-br from-[#faf7f2] via-[#f5f0e8] to-[#ede5d8]">
       {/* Header */}
       <header className="border-b border-[#d4b896]/60 bg-white/80 backdrop-blur-xl sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Mobile Menu */}
             <div className="md:hidden">
@@ -420,420 +552,160 @@ export default function AddMemoryPage() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 max-w-7xl">
-        {/* Back Button & Title */}
-        <div className="mb-4">
-          <div className="bg-gradient-to-br from-white to-[#fef9f3] shadow-sm rounded-lg border border-[#d4b896]/30 p-3 sm:p-4">
-            <Link href="/dashboard" className="inline-flex items-center gap-1.5 handwritten text-sm text-[#7f8c8d] hover:text-[#2c3e50] transition-colors mb-1.5">
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Back to Dashboard
-            </Link>
-            <h1 className="text-2xl sm:text-3xl handwritten font-bold text-[#2c3e50] mb-0.5">
-              Capture a Moment
-            </h1>
-            <p className="text-sm handwritten text-[#7f8c8d]">
-              Write down your thoughts and preserve this memory forever
-            </p>
-          </div>
-        </div>
-
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
-          {/* Left Column - Mood, Tags, Media (Smaller - 2 cols on desktop) */}
-          <div className="lg:col-span-2 space-y-3 lg:space-y-4">
-            {/* Mood Selector */}
-            <div className="bg-white shadow-sm rounded-xl border border-[#ff9a8b]/30 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base sm:text-lg handwritten font-bold text-[#2c3e50]">How are you feeling?</h3>
-                {/* Toggle button - visible on all screen sizes */}
-                <button
-                  onClick={() => setShowAllMoods(!showAllMoods)}
-                  className="text-xs handwritten font-medium text-[#3498db] hover:text-[#2980b9] transition-colors flex items-center gap-1"
-                >
-                  {showAllMoods ? 'Show Less' : 'Show More'}
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllMoods ? 'rotate-180' : ''}`} />
-                </button>
-              </div>
-              <div className={`grid gap-2 transition-all duration-300 ${
-                showAllMoods 
-                  ? 'grid-cols-4 sm:grid-cols-6' 
-                  : 'grid-cols-4 sm:grid-cols-6'
-              }`}>
-                {moodEmojis
-                  .slice(0, showAllMoods ? moodEmojis.length : (isMobile ? 4 : 6))
-                  .map((mood) => (
-                    <button
-                      key={mood.label}
-                      onClick={() => setSelectedMood(mood.emoji)}
-                      className={`aspect-square rounded-lg flex items-center justify-center text-2xl sm:text-3xl transition-all duration-200 hover:scale-105 ${
-                        selectedMood === mood.emoji
-                          ? 'ring-2 ring-[#3498db] shadow-md scale-105'
-                          : 'hover:bg-[#fef9f3] border border-transparent hover:border-[#d4b896]/50'
-                      }`}
-                      style={{
-                        backgroundColor: selectedMood === mood.emoji ? mood.color + '40' : 'transparent'
-                      }}
-                      title={mood.label}
-                    >
-                      {mood.emoji}
-                    </button>
-                  ))}
-              </div>
-              {selectedMood && (
-                <p className="text-sm handwritten text-center mt-2 text-[#7f8c8d]">
-                  Feeling {moodEmojis.find(m => m.emoji === selectedMood)?.label} ✨
-                </p>
-              )}
-            </div>
-
-            {/* Tags */}
-            <div className="bg-white shadow-sm rounded-xl border border-[#8dd3c7]/30 p-4">
-              <h3 className="text-base sm:text-lg handwritten font-bold mb-3 text-[#2c3e50]">Tags</h3>
-              
-              {/* Tag Input */}
-              <div className="flex gap-2 mb-3">
-                <Input
-                  placeholder="Add a tag..."
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      handleAddTag(tagInput)
-                    }
-                  }}
-                  className="handwritten text-sm bg-[#fef9f3] border-[#d4b896] rounded-lg py-2 px-3"
+      {/* Main Content - Full Width Diary */}
+      <main className="h-[calc(100vh-65px)]">
+        <div className="h-full max-w-7xl mx-auto px-6 py-4">
+          {/* Diary Container */}
+          <div className="h-full flex flex-col bg-white rounded-2xl border-2 border-[#d4b896] shadow-xl overflow-hidden">
+            
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto px-8 py-4 bg-white">
+              {/* Working Editor with Toolbar */}
+              <div className="working-editor-container">
+                <TiptapEditor
+                  content={content}
+                  onChange={(html) => setContent(html)}
+                  placeholder="Start writing your thoughts..."
                 />
-                <Button
-                  onClick={() => handleAddTag(tagInput)}
-                  size="sm"
-                  className="handwritten text-sm bg-[#8dd3c7] hover:bg-[#7bc4ba] text-white px-4 rounded-lg whitespace-nowrap"
-                >
-                  Add
-                </Button>
-              </div>
-
-              {/* Tag Suggestions */}
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {tagSuggestions.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => handleAddTag(tag)}
-                    className="px-2.5 py-1 text-xs handwritten font-medium rounded-full border border-dashed border-[#d4b896] hover:bg-[#fef9f3] hover:border-[#3498db] transition-all"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-
-              {/* Selected Tags */}
-              {tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {tags.map((tag, index) => {
-                    const colors = ['#B5D99C', '#8dd3c7', '#ff9a8b', '#3498db', '#C8B8DB', '#FFD56F']
-                    return (
-                      <div
-                        key={tag}
-                        className="px-2 py-1 shadow-sm rounded-md text-xs flex items-center gap-1"
-                        style={{ 
-                          backgroundColor: colors[index % colors.length]
-                        }}
-                      >
-                        <span className="handwritten font-bold text-white">
-                          #{tag}
-                        </span>
-                        <button
-                          onClick={() => handleRemoveTag(tag)}
-                          className="hover:scale-110 transition-transform"
+                
+                {/* Overlay content for proper positioning */}
+                <div className="absolute top-20 left-4 right-4 z-20 bg-white border border-[#d4b896]/30 rounded-lg p-4 shadow-sm">
+                  {/* Header Section */}
+                  <div className="mb-3 pb-3 border-b border-[#d4b896]/40">
+                    {/* Date and Mood */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex flex-col">
+                        <h2 className="text-xl handwritten font-bold text-[#2c3e50] flex items-center gap-2 mb-1">
+                          📖 My Diary
+                        </h2>
+                        <p className="text-sm handwritten text-[#7f8c8d] font-medium">
+                          {new Date().toLocaleDateString('en-US', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <label className="text-sm handwritten font-medium text-[#7f8c8d] mb-1">
+                          How are you feeling?
+                        </label>
+                        <select 
+                          value={selectedMood || ''}
+                          onChange={(e) => setSelectedMood(e.target.value)}
+                          className="handwritten font-medium text-lg bg-white border-2 border-[#d4b896]/50 rounded-lg px-3 py-1 focus:outline-none focus:border-[#3498db] transition-colors"
                         >
-                          <X className="w-2.5 h-2.5 text-white" />
-                        </button>
+                          <option value="">😊</option>
+                          {moodEmojis.map((mood) => (
+                            <option key={mood.emoji} value={mood.emoji}>
+                              {mood.emoji}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Media Upload */}
-            <div className="bg-white shadow-sm rounded-xl border border-[#b5d99c]/30 p-4">
-              <h3 className="text-base sm:text-lg handwritten font-bold mb-3 text-[#2c3e50]">Photos & Videos</h3>
-              
-              {/* Upload Button - Only show if no files uploaded */}
-              {uploadPreviews.length === 0 ? (
-                <label className="flex flex-col items-center justify-center border-2 border-dashed border-[#d4b896] rounded-xl p-6 cursor-pointer hover:border-[#3498db] hover:bg-[#fef9f3] transition-all duration-200">
-                  <div className="flex gap-2 mb-2">
-                    <ImageIcon className="w-6 h-6 text-[#7f8c8d]" />
-                    <Video className="w-6 h-6 text-[#7f8c8d]" />
-                  </div>
-                  <p className="text-sm handwritten text-[#7f8c8d] text-center font-medium">
-                    Click to upload photos or videos
-                  </p>
-                  <p className="text-xs handwritten text-[#7f8c8d]/70 text-center mt-1">
-                    Max 10MB per file
-                  </p>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/tiff,image/svg+xml,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska,video/x-ms-wmv,video/x-flv,video/x-m4v"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                </label>
-              ) : (
-                <>
-                  {/* Uploaded Files Preview with Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-                    {uploadPreviews.map((preview, index) => (
-                      <div key={index} className="relative">
-                        <div className="relative rounded-lg overflow-hidden shadow-sm group border border-[#d4b896]/30 bg-[#fef9f3]">
-                          <div className="relative w-full" style={{ paddingBottom: '100%' }}>
-                            <img
-                              src={preview}
-                              alt={`Upload ${index + 1}`}
-                              className="absolute inset-0 w-full h-full object-contain p-1"
-                            />
-                          </div>
-                          {/* Expand Button */}
-                          <button
-                            onClick={() => setExpandedImageIndex(index)}
-                            className="absolute bottom-1.5 left-1.5 p-1 bg-[#3498db] text-white rounded-full opacity-90 hover:opacity-100 transition-all hover:scale-110 shadow-md z-10"
-                            title="Expand image"
-                          >
-                            <Maximize2 className="w-3 h-3" />
-                          </button>
-                          {/* Delete Button */}
-                          <button
-                            onClick={() => handleRemoveFile(index)}
-                            className="absolute top-1.5 right-1.5 p-1 bg-[#e74c3c] text-white rounded-full opacity-90 hover:opacity-100 transition-all hover:scale-110 shadow-md z-10"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Add More Button */}
-                  <label className="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-[#d4b896] rounded-lg cursor-pointer hover:border-[#3498db] hover:bg-[#fef9f3] transition-all">
-                    <ImageIcon className="w-4 h-4 text-[#7f8c8d]" />
-                    <span className="text-xs handwritten text-[#7f8c8d] font-medium">Add more</span>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/tiff,image/svg+xml,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska,video/x-ms-wmv,video/x-flv,video/x-m4v"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </label>
-                </>
-              )}
-            </div>
-
-            {/* Audio Recording */}
-            <div className="bg-white shadow-sm rounded-xl border border-[#b5d99c]/30 p-4">
-              <h3 className="text-base sm:text-lg handwritten font-bold mb-3 text-[#2c3e50]">Audio Recording</h3>
-              
-              {!audioURL ? (
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={isRecordingAudio ? stopAudioRecording : startAudioRecording}
-                    className={`w-full flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 transition-all duration-200 ${
-                      isRecordingAudio 
-                        ? 'border-red-500 bg-red-50 animate-pulse' 
-                        : 'border-[#d4b896] hover:border-[#3498db] hover:bg-[#fef9f3] cursor-pointer'
-                    }`}
-                  >
-                    {isRecordingAudio ? (
-                      <>
-                        <div className="relative">
-                          <Mic className="w-8 h-8 text-red-500 animate-pulse" />
-                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
-                        </div>
-                        <p className="text-sm handwritten text-red-600 font-bold mt-2">
-                          Recording... {formatTime(recordingTime)}
-                        </p>
-                        <p className="text-xs handwritten text-red-500/70 mt-1">
-                          Click to stop
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <Mic className="w-8 h-8 text-[#7f8c8d] mb-2" />
-                        <p className="text-sm handwritten text-[#7f8c8d] text-center font-medium">
-                          Click to record audio
-                        </p>
-                        <p className="text-xs handwritten text-[#7f8c8d]/70 text-center mt-1">
-                          Share your voice with your memory
-                        </p>
-                      </>
-                    )}
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="bg-[#fef9f3] border border-[#d4b896]/30 rounded-xl p-3">
-                    <div className="flex items-center gap-3">
-                      <div className="shrink-0 w-10 h-10 bg-[#3498db]/10 rounded-full flex items-center justify-center">
-                        <Mic className="w-5 h-5 text-[#3498db]" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm handwritten font-semibold text-[#2c3e50]">Audio Recording</p>
-                        <p className="text-xs handwritten text-[#7f8c8d]">{formatTime(recordingTime)}</p>
-                      </div>
-                      <button
-                        onClick={deleteAudioRecording}
-                        className="shrink-0 p-1.5 bg-[#e74c3c] text-white rounded-full hover:bg-[#c0392b] transition-all hover:scale-110 shadow-sm"
-                        title="Delete recording"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
                     </div>
-                    <audio src={audioURL} controls className="w-full mt-3 h-8" />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
 
-          {/* Right Column - Text Editor (Larger - 3 cols on desktop) */}
-          <div className="lg:col-span-3">
-            <div className="bg-white shadow-md rounded-2xl border border-[#3498db]/30 p-4 sm:p-6">
-              <div className="space-y-4">
-                {/* Title Input */}
-                <div className="space-y-2">
-                  <Label htmlFor="title" className="text-base sm:text-lg handwritten font-semibold text-[#2c3e50]">
-                    Title
-                  </Label>
-                  <Input
-                    id="title"
-                    placeholder="Give your memory a title..."
+                    {/* Location and Tags */}
+                    <div className="flex gap-2 mb-2">
+                      <div className="relative w-auto">
+                        <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#7f8c8d]" />
+                        <input 
+                          type="text"
+                          placeholder="Location"
+                          value={location}
+                          onChange={(e) => setLocation(e.target.value)}
+                          className="handwritten text-xs border border-[#d4b896] bg-[#fef9f3] rounded-md px-2 py-1 pl-6 focus:border-[#3498db] focus:outline-none transition-all w-48"
+                        />
+                      </div>
+                      <div className="w-auto">
+                        <input 
+                          type="text"
+                          placeholder="Add tags... (press Enter)"
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              handleAddTag(tagInput)
+                            }
+                          }}
+                          className="handwritten text-xs border border-[#d4b896] bg-[#fef9f3] rounded-md px-2 py-1 focus:border-[#3498db] focus:outline-none transition-all w-56"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Tags Display */}
+                    {tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {tags.map((tag) => (
+                          <span key={tag} className="inline-flex items-center gap-0.5 bg-[#3498db] text-white text-xs px-2 py-0.5 rounded-full handwritten">
+                            {tag}
+                            <button onClick={() => handleRemoveTag(tag)} className="hover:scale-110 transition-transform">
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Title */}
+                  <input
+                    type="text"
+                    placeholder="Give your day a title..."
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="text-lg sm:text-xl handwritten font-bold bg-[#fef9f3] border-2 border-[#d4b896] rounded-xl px-3 sm:px-4 py-2 sm:py-3 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20 text-[#2c3e50]"
+                    className="w-full text-xl handwritten font-bold text-[#2c3e50] bg-transparent border-none outline-none mb-3 placeholder:text-[#7f8c8d]/50"
                   />
-                </div>
-
-                {/* Date and Location */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="date" className="text-sm sm:text-base handwritten font-semibold flex items-center gap-2 text-[#2c3e50]">
-                      <Calendar className="w-4 h-4" />
-                      Date
-                    </Label>
-                    <Input
-                      id="date"
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="handwritten text-sm bg-[#fef9f3] border-2 border-[#d4b896] rounded-xl px-3 py-2 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="location" className="text-sm sm:text-base handwritten font-semibold flex items-center gap-2 text-[#2c3e50]">
-                      <MapPin className="w-4 h-4" />
-                      Location
-                    </Label>
-                    <Input
-                      id="location"
-                      placeholder="Where were you?"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      className="handwritten text-sm bg-[#fef9f3] border-2 border-[#d4b896] rounded-xl px-3 py-2 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20"
-                    />
-                  </div>
-                </div>
-
-                {/* Content Textarea */}
-                <div className="space-y-2">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <Label htmlFor="content" className="text-base sm:text-lg handwritten font-semibold text-[#2c3e50]">
-                      Your Story
-                    </Label>
-                    <button
-                      type="button"
-                      onClick={toggleVoiceRecording}
-                      className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all w-full sm:w-auto ${
-                        isRecording 
-                          ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
-                          : 'bg-[#3498db] hover:bg-[#2980b9] text-white'
-                      }`}
-                      title={isRecording ? 'Stop recording' : 'Start voice recording'}
-                    >
-                      {isRecording ? (
-                        <>
-                          <MicOff className="w-4 h-4" />
-                          <span className="text-xs sm:text-sm handwritten">Recording...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Mic className="w-4 h-4" />
-                          <span className="text-xs sm:text-sm handwritten">Voice</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <Textarea
-                      id="content"
-                      placeholder="Pour your heart out... What happened? How did you feel? (Or click the mic button to speak)"
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      className="min-h-[250px] sm:min-h-[350px] resize-none bg-[#fef9f3] border-2 border-[#d4b896] text-base handwritten leading-relaxed text-[#2c3e50] rounded-xl px-3 py-3 focus:border-[#3498db] focus:ring-2 focus:ring-[#3498db]/20"
-                    />
-                    {isRecording && (
-                      <div className="absolute bottom-3 right-3 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full">
-                        <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                        <span className="text-xs handwritten">Listening...</span>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs sm:text-sm handwritten text-[#7f8c8d]">
-                    {content.length} characters
-                  </p>
                 </div>
               </div>
             </div>
 
+          {/* Footer with Save Button and Character Count */}
+          <div className="bg-[#fef9f3] border-t-2 border-[#d4b896] p-4 shrink-0">
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded-xl shadow-sm">
-                <p className="text-xs sm:text-sm handwritten text-red-700 font-medium">{error}</p>
+              <div className="mb-3 bg-red-50 border-l-4 border-red-500 p-3 rounded-lg">
+                <p className="text-sm handwritten text-red-700 font-medium">{error}</p>
               </div>
             )}
-
-            {/* Save Button */}
-            <Button
-              onClick={handleSave}
-              disabled={isSaving || !title || !content || authLoading}
-              className="w-full h-12 sm:h-14 text-base sm:text-lg handwritten font-bold relative overflow-hidden rounded-xl bg-linear-to-r from-[#8b6f47] to-[#d4a574] hover:from-[#6d5638] hover:to-[#b8895d] shadow-lg hover:shadow-xl transition-all mt-4 sm:mt-6"
-              size="lg"
-            >
-              {isSaving ? (
-                <div className="flex flex-col items-center gap-1">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Saving Memory...
-                  </div>
-                  {uploadProgress > 0 && (
-                    <div className="text-xs opacity-90">
-                      {uploadProgress < 30 ? 'Creating memory...' : 
-                       uploadProgress < 90 ? 'Uploading files...' : 
-                       'Almost done!'}
-                    </div>
-                  )}
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/dashboard"
+                  className="text-sm handwritten text-[#7f8c8d] hover:text-[#2c3e50] transition-colors flex items-center gap-1"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  Back
+                </Link>
+                <div className="text-sm handwritten text-[#7f8c8d]">
+                  {content.replace(/<[^>]*>/g, '').length} characters
                 </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Save className="w-6 h-6" />
-                  Save Memory
-                </div>
-              )}
-            </Button>
+              </div>
+              <Button
+                onClick={handleSave}
+                disabled={isSaving || !title.trim() || !content.trim()}
+                className="bg-[#3498db] hover:bg-[#2980b9] text-white px-6 py-2 rounded-lg handwritten font-medium shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save Memory
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+        </div>
+      </main>
 
       {/* Simplified Terminal-Style Loading Overlay */}
       {isSaving && (
@@ -912,7 +784,7 @@ export default function AddMemoryPage() {
                   >
                     <ArrowLeft className="w-4 h-4 text-[#8b6f47]" />
                   </button>
-                  <span className="text-[#8b6f47] text-sm handwritten font-semibold min-w-[3rem] text-center">
+                  <span className="text-[#8b6f47] text-sm handwritten font-semibold min-w-12 text-center">
                     {expandedImageIndex + 1} / {uploadPreviews.length}
                   </span>
                   <button
@@ -928,6 +800,38 @@ export default function AddMemoryPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* CSS for properly organized layout */}
+      <style jsx global>{`
+        .working-editor-container {
+          position: relative;
+          height: 100%;
+        }
+        
+        /* Position toolbar at the very top */
+        .working-editor-container .tiptap-editor > div:first-child {
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          background: white;
+          border-bottom: 2px solid #d4b896;
+          padding: 12px 20px;
+          margin: -16px -20px 0 -20px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        /* Position editor content properly */
+        .working-editor-container .tiptap-content {
+          padding: 240px 0 16px 0;
+        }
+        
+        .working-editor-container .ProseMirror {
+          min-height: 400px;
+          outline: none;
+          font-family: 'handwritten', cursive;
+        }
+      `}</style>
+
     </div>
   )
 }

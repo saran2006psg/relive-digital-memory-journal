@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 import { UserMenu } from "@/components/UserMenu"
 import { MobileNav } from "@/components/MobileNav"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
+import { stripHtmlTags } from "@/lib/media-parser"
 
 const dashboardSections: {
   id: string
@@ -79,23 +80,12 @@ export default function DashboardPage() {
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
         )
 
-        // Try to get name from account table
-        const { data: accountData, error } = await supabase
-          .from('account')
-          .select('name')
-          .eq('userId', user.id)
-          .single()
-
-        if (accountData?.name) {
-          setUserName(accountData.name)
-        } else {
-          // Fallback to user metadata or email
-          const name = user.user_metadata?.name || 
-                      user.user_metadata?.full_name || 
-                      user.email?.split('@')[0] || 
-                      'Traveler'
-          setUserName(name)
-        }
+        // Get name from user metadata or email
+        const name = user.user_metadata?.name || 
+                    user.user_metadata?.full_name || 
+                    user.email?.split('@')[0] || 
+                    'User'
+        setUserName(name)
       } catch (error) {
         console.error('Error fetching user name:', error)
         // Fallback to email username or metadata
@@ -363,9 +353,16 @@ export default function DashboardPage() {
   }, [])
 
   const getGreeting = () => {
-    if (currentHour < 12) return "Good Morning"
-    if (currentHour < 18) return "Good Afternoon"
-    return "Good Evening"
+    // 0-4: Good Night (midnight to 4:59 AM)
+    if (currentHour >= 0 && currentHour < 5) return "Good Night"
+    // 5-11: Good Morning (5 AM to 11:59 AM)
+    if (currentHour >= 5 && currentHour < 12) return "Good Morning"
+    // 12-16: Good Afternoon (noon to 4:59 PM)
+    if (currentHour >= 12 && currentHour < 17) return "Good Afternoon"
+    // 17-20: Good Evening (5 PM to 8:59 PM)
+    if (currentHour >= 17 && currentHour < 21) return "Good Evening"
+    // 21-23: Good Night (9 PM to 11:59 PM)
+    return "Good Night"
   }
 
   const scrollToSection = (sectionId: string) => {
@@ -555,9 +552,12 @@ export default function DashboardPage() {
                                 <h3 className="text-2xl handwritten font-bold mb-3 text-[#2c3e50]">{memory.title}</h3>
                                 {memory.content && (
                                   <p className="text-base handwritten text-[#34495e] leading-relaxed">
-                                    {memory.content.length > 150 
-                                      ? `${memory.content.substring(0, 150)}...` 
-                                      : memory.content}
+                                    {(() => {
+                                      const plainText = stripHtmlTags(memory.content)
+                                      return plainText.length > 150 
+                                        ? `${plainText.substring(0, 150)}...` 
+                                        : plainText
+                                    })()}
                                   </p>
                                 )}
                               </div>
