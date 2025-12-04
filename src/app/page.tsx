@@ -15,7 +15,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-[url('/notebook-pattern.svg')] opacity-5" />
       
       <div className="absolute inset-0 pointer-events-none">
         <div className="h-full relative">

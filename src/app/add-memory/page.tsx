@@ -512,7 +512,31 @@ export default function AddMemoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-[#faf7f2] via-[#f5f0e8] to-[#ede5d8]">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Notebook background with ruled lines */}
+      <div className="fixed inset-0 bg-white" style={{
+        backgroundImage: `
+          linear-gradient(
+            90deg,
+            #ffffff 80px,
+            #ffffff 82px,
+            transparent 82px
+          ),
+          repeating-linear-gradient(
+            0deg,
+            transparent 0px,
+            transparent 34px,
+            rgba(99, 179, 237, 0.25) 34px,
+            rgba(99, 179, 237, 0.25) 35px
+          )
+        `,
+        backgroundSize: '100% 100%, 100% 35px',
+        backgroundRepeat: 'no-repeat, repeat',
+        backgroundAttachment: 'scroll'
+      }} />
+      
+      {/* Content overlay */}
+      <div className="relative z-10">
       {/* Header */}
       <header className="border-b border-[#d4b896]/60 bg-white/80 backdrop-blur-xl sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3">
@@ -559,69 +583,57 @@ export default function AddMemoryPage() {
           <div className="h-full flex flex-col bg-white rounded-2xl border-2 border-[#d4b896] shadow-xl overflow-hidden">
             
             {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto px-8 py-4 bg-white">
+            <div className="flex-1 overflow-y-auto bg-white">
               {/* Working Editor with Toolbar */}
-              <div className="working-editor-container">
+              <div className="working-editor-container px-4">
                 <TiptapEditor
                   content={content}
                   onChange={(html) => setContent(html)}
                   placeholder="Start writing your thoughts..."
                 />
                 
-                {/* Overlay content for proper positioning */}
-                <div className="absolute top-20 left-4 right-4 z-20 bg-white border border-[#d4b896]/30 rounded-lg p-4 shadow-sm">
-                  {/* Header Section */}
-                  <div className="mb-3 pb-3 border-b border-[#d4b896]/40">
-                    {/* Date and Mood */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex flex-col">
-                        <h2 className="text-xl handwritten font-bold text-[#2c3e50] flex items-center gap-2 mb-1">
-                          📖 My Diary
-                        </h2>
-                        <p className="text-sm handwritten text-[#7f8c8d] font-medium">
-                          {new Date().toLocaleDateString('en-US', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <label className="text-sm handwritten font-medium text-[#7f8c8d] mb-1">
-                          How are you feeling?
-                        </label>
-                        <select 
-                          value={selectedMood || ''}
-                          onChange={(e) => setSelectedMood(e.target.value)}
-                          className="handwritten font-medium text-lg bg-white border-2 border-[#d4b896]/50 rounded-lg px-3 py-1 focus:outline-none focus:border-[#3498db] transition-colors"
-                        >
-                          <option value="">😊</option>
-                          {moodEmojis.map((mood) => (
-                            <option key={mood.emoji} value={mood.emoji}>
-                              {mood.emoji}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Location and Tags */}
-                    <div className="flex gap-2 mb-2">
-                      <div className="relative w-auto">
-                        <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#7f8c8d]" />
-                        <input 
+                {/* Compact Header Section */}
+                <div className="absolute top-20 left-0 right-0 z-20 bg-linear-to-b from-[#fef9f3] to-white border-b-2 border-[#d4b896]/40 shadow-sm px-6 py-3">
+                  <div className="flex items-start justify-between gap-4">
+                    {/* Left: Title & Meta Info */}
+                    <div className="flex-1 space-y-2">
+                      {/* Title Input with Icon */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">📖</span>
+                        <input
                           type="text"
-                          placeholder="Location"
-                          value={location}
-                          onChange={(e) => setLocation(e.target.value)}
-                          className="handwritten text-xs border border-[#d4b896] bg-[#fef9f3] rounded-md px-2 py-1 pl-6 focus:border-[#3498db] focus:outline-none transition-all w-48"
+                          placeholder="Today's Story..."
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          className="flex-1 text-lg handwritten font-bold text-[#2c3e50] bg-transparent border-none outline-none placeholder:text-[#7f8c8d]/40"
                         />
                       </div>
-                      <div className="w-auto">
+                      
+                      {/* Date & Meta Row */}
+                      <div className="flex items-center gap-3 text-xs handwritten text-[#7f8c8d]">
+                        <span className="font-medium">
+                          {new Date().toLocaleDateString('en-US', { 
+                            weekday: 'short',
+                            month: 'short', 
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </span>
+                        <span className="text-[#d4b896]">•</span>
+                        <div className="relative">
+                          <MapPin className="absolute left-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-[#7f8c8d]" />
+                          <input 
+                            type="text"
+                            placeholder="Add location"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            className="handwritten text-xs bg-transparent border-b border-[#d4b896]/30 pl-5 pr-2 py-0.5 focus:border-[#3498db] focus:outline-none transition-all w-32"
+                          />
+                        </div>
+                        <span className="text-[#d4b896]">•</span>
                         <input 
                           type="text"
-                          placeholder="Add tags... (press Enter)"
+                          placeholder="#tags"
                           value={tagInput}
                           onChange={(e) => setTagInput(e.target.value)}
                           onKeyPress={(e) => {
@@ -630,52 +642,62 @@ export default function AddMemoryPage() {
                               handleAddTag(tagInput)
                             }
                           }}
-                          className="handwritten text-xs border border-[#d4b896] bg-[#fef9f3] rounded-md px-2 py-1 focus:border-[#3498db] focus:outline-none transition-all w-56"
+                          className="handwritten text-xs bg-transparent border-b border-[#d4b896]/30 px-2 py-0.5 focus:border-[#3498db] focus:outline-none transition-all w-24"
                         />
                       </div>
+
+                      {/* Tags Display */}
+                      {tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {tags.map((tag) => (
+                            <span key={tag} className="inline-flex items-center gap-1 bg-[#3498db]/10 text-[#3498db] text-xs px-2 py-0.5 rounded-full handwritten border border-[#3498db]/20">
+                              #{tag}
+                              <button onClick={() => handleRemoveTag(tag)} className="hover:scale-110 transition-transform">
+                                <X className="w-2.5 h-2.5" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
-                    {/* Tags Display */}
-                    {tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {tags.map((tag) => (
-                          <span key={tag} className="inline-flex items-center gap-0.5 bg-[#3498db] text-white text-xs px-2 py-0.5 rounded-full handwritten">
-                            {tag}
-                            <button onClick={() => handleRemoveTag(tag)} className="hover:scale-110 transition-transform">
-                              <X className="w-2.5 h-2.5" />
-                            </button>
-                          </span>
+                    {/* Right: Mood Selector */}
+                    <div className="flex flex-col items-end gap-1">
+                      <label className="text-xs handwritten font-medium text-[#7f8c8d]">
+                        Mood
+                      </label>
+                      <select 
+                        value={selectedMood || ''}
+                        onChange={(e) => setSelectedMood(e.target.value)}
+                        className="handwritten font-medium text-2xl bg-white/50 border border-[#d4b896]/30 rounded-lg px-2 py-1 focus:outline-none focus:border-[#3498db] transition-colors cursor-pointer hover:bg-white"
+                      >
+                        <option value="">😊</option>
+                        {moodEmojis.map((mood) => (
+                          <option key={mood.emoji} value={mood.emoji}>
+                            {mood.emoji}
+                          </option>
                         ))}
-                      </div>
-                    )}
+                      </select>
+                    </div>
                   </div>
-
-                  {/* Title */}
-                  <input
-                    type="text"
-                    placeholder="Give your day a title..."
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full text-xl handwritten font-bold text-[#2c3e50] bg-transparent border-none outline-none mb-3 placeholder:text-[#7f8c8d]/50"
-                  />
                 </div>
               </div>
             </div>
 
           {/* Footer with Save Button and Character Count */}
-          <div className="bg-[#fef9f3] border-t-2 border-[#d4b896] p-4 shrink-0">
+          <div className="bg-[#fef9f3]/80 backdrop-blur-sm border-t border-[#d4b896]/40 px-8 py-3 shrink-0">
             {/* Error Message */}
             {error && (
-              <div className="mb-3 bg-red-50 border-l-4 border-red-500 p-3 rounded-lg">
-                <p className="text-sm handwritten text-red-700 font-medium">{error}</p>
+              <div className="mb-2 bg-red-50 border-l-4 border-red-500 p-2 rounded">
+                <p className="text-xs handwritten text-red-700 font-medium">{error}</p>
               </div>
             )}
             
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <Link
                   href="/dashboard"
-                  className="text-sm handwritten text-[#7f8c8d] hover:text-[#2c3e50] transition-colors flex items-center gap-1"
+                  className="text-sm handwritten text-[#7f8c8d] hover:text-[#2c3e50] transition-colors flex items-center gap-1.5"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   Back
@@ -687,7 +709,7 @@ export default function AddMemoryPage() {
               <Button
                 onClick={handleSave}
                 disabled={isSaving || !title.trim() || !content.trim()}
-                className="bg-[#3498db] hover:bg-[#2980b9] text-white px-6 py-2 rounded-lg handwritten font-medium shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="bg-[#3498db] hover:bg-[#2980b9] text-white px-5 py-2 rounded-xl handwritten font-medium shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isSaving ? (
                   <>
@@ -809,29 +831,48 @@ export default function AddMemoryPage() {
         }
         
         /* Position toolbar at the very top */
+        .working-editor-container .tiptap-editor {
+          position: relative;
+        }
+        
         .working-editor-container .tiptap-editor > div:first-child {
-          position: sticky;
-          top: 0;
-          z-index: 50;
-          background: white;
-          border-bottom: 2px solid #d4b896;
-          padding: 12px 20px;
-          margin: -16px -20px 0 -20px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          position: sticky !important;
+          top: 0 !important;
+          z-index: 100 !important;
+          background: #fef9f3 !important;
+          border: 1px solid #d4b896 !important;
+          border-left: none !important;
+          border-right: none !important;
+          border-radius: 0 !important;
+          padding: 8px 32px !important;
+          margin: -16px -16px 16px -16px !important;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
         }
         
         /* Position editor content properly */
         .working-editor-container .tiptap-content {
-          padding: 240px 0 16px 0;
+          padding: 0;
+          margin-top: 140px;
         }
         
         .working-editor-container .ProseMirror {
           min-height: 400px;
           outline: none;
           font-family: 'handwritten', cursive;
+          padding: 16px;
+          font-size: 18px;
+          line-height: 1.8;
+        }
+        
+        .working-editor-container .ProseMirror p.is-editor-empty:first-child::before {
+          color: rgba(127, 140, 141, 0.5);
+          content: attr(data-placeholder);
+          float: left;
+          height: 0;
+          pointer-events: none;
         }
       `}</style>
-
+      </div>
     </div>
   )
 }

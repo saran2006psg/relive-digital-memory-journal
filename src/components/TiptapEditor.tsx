@@ -56,6 +56,7 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
 
   const editor = useEditor({
     immediatelyRender: false,
+    shouldRerenderOnTransaction: false,
     extensions: [
       StarterKit.configure({
         heading: {

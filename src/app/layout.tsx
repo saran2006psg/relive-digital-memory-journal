@@ -9,6 +9,8 @@ const architectsDaughter = Architects_Daughter({
   weight: "400",
   subsets: ["latin"],
   variable: "--font-architects-daughter",
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -25,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body className={`${architectsDaughter.variable} antialiased`}>
         <ErrorReporter />
         <Script
