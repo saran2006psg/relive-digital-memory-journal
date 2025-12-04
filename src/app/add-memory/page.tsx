@@ -662,22 +662,44 @@ export default function AddMemoryPage() {
                     </div>
 
                     {/* Right: Mood Selector */}
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-col items-end gap-1 relative">
                       <label className="text-xs handwritten font-medium text-[#7f8c8d]">
                         Mood
                       </label>
-                      <select 
-                        value={selectedMood || ''}
-                        onChange={(e) => setSelectedMood(e.target.value)}
-                        className="handwritten font-medium text-2xl bg-white/50 border border-[#d4b896]/30 rounded-lg px-2 py-1 focus:outline-none focus:border-[#3498db] transition-colors cursor-pointer hover:bg-white"
+                      <button
+                        type="button"
+                        onClick={() => setShowAllMoods(!showAllMoods)}
+                        className="handwritten font-medium text-2xl bg-white/50 border border-[#d4b896]/30 rounded-lg px-3 py-1 focus:outline-none focus:border-[#3498db] transition-colors cursor-pointer hover:bg-white flex items-center gap-1"
                       >
-                        <option value="">😊</option>
-                        {moodEmojis.map((mood) => (
-                          <option key={mood.emoji} value={mood.emoji}>
-                            {mood.emoji}
-                          </option>
-                        ))}
-                      </select>
+                        <span>{selectedMood || '😊'}</span>
+                        <ChevronDown className={`w-4 h-4 text-[#8b6f47] transition-transform ${showAllMoods ? 'rotate-180' : ''}`} />
+                      </button>
+                      
+                      {/* Mood Grid Dropdown */}
+                      {showAllMoods && (
+                        <div className="absolute top-full right-0 mt-1 bg-white border-2 border-[#d4b896]/50 rounded-xl shadow-xl p-2 z-50 w-[140px]">
+                          <div className="grid grid-cols-3 gap-1">
+                            {moodEmojis.map((mood) => (
+                              <button
+                                key={mood.emoji}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedMood(mood.emoji)
+                                  setShowAllMoods(false)
+                                }}
+                                className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all hover:scale-110 ${
+                                  selectedMood === mood.emoji 
+                                    ? 'ring-2 ring-[#8b6f47] bg-[#fef9f3]' 
+                                    : 'hover:bg-[#d8a260b5]'
+                                }`}
+                                title={mood.label}
+                              >
+                                {mood.emoji}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

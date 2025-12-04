@@ -550,316 +550,291 @@ export default function GalleryPage() {
         )}
       </div>
 
-      {/* Full-Page Modal Overlay - Diary Theme */}
+      {/* Full-Page Modal Overlay - Add Memory Style */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 bg-linear-to-br from-[#faf7f2] via-[#f5f0e8] to-[#ede5d8] overflow-y-auto">
-          <div className="relative w-full min-h-screen">
-            
-            {/* Action Buttons - Top Right */}
-            <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
-              {/* Edit Button */}
-              {!isEditing && (
-                <button
-                  onClick={handleEdit}
-                  className="w-12 h-12 bg-white hover:bg-blue-50 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 border-4 border-[#3498db]"
-                  title="Edit memory"
-                >
-                  <Edit2 className="w-5 h-5 text-[#3498db]" />
-                </button>
-              )}
-
-              {/* Delete Button */}
-              {!isEditing && (
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="w-12 h-12 bg-white hover:bg-red-50 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 border-4 border-red-500"
-                  title="Delete memory"
-                >
-                  <Trash2 className="w-5 h-5 text-red-500" />
-                </button>
-              )}
-
-              {/* Close Button */}
-              <button
-                onClick={() => {
-                  setSelectedItem(null)
-                  setIsEditing(false)
-                }}
-                className="w-12 h-12 bg-white hover:bg-red-50 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 border-4 border-[#d4b896]"
-              >
-                <X className="w-6 h-6 text-[#8b6f47]" />
-              </button>
-            </div>
-
-            {/* Main Content Container - Centered Diary Style */}
-            <div className="w-full h-full">
-              
-              {/* Diary Paper Container */}
-              <div className="bg-[#fef9f3] min-h-screen">
-                
-                {/* Header - Vintage Style */}
-                <div className="bg-linear-to-r from-[#a0826d] to-[#8b6f47] px-8 py-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Calendar className="w-6 h-6 text-[#fef9f3]" />
-                      <span className="text-2xl handwritten font-bold text-[#fef9f3]" style={{ fontFamily: 'Dancing Script, cursive' }}>
-                        {new Date(selectedItem.date).toLocaleDateString('en-US', { 
-                          weekday: 'long',
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
-                      </span>
-                    </div>
-                    
-                    {selectedItem.mood && (
-                      <div 
-                        className="w-16 h-16 rounded-full flex items-center justify-center text-4xl shadow-lg border-4 border-white"
-                        style={{ backgroundColor: moodColors[selectedItem.mood] || '#B5D99C' }}
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Notebook Background */}
+          <div className="fixed inset-0 bg-white" style={{
+            backgroundImage: `
+              linear-gradient(
+                90deg,
+                #ffffff 80px,
+                #ffffff 82px,
+                transparent 82px
+              ),
+              repeating-linear-gradient(
+                0deg,
+                transparent 0px,
+                transparent 34px,
+                rgba(99, 179, 237, 0.25) 34px,
+                rgba(99, 179, 237, 0.25) 35px
+              )
+            `,
+            backgroundSize: '100% 100%, 100% 35px',
+            backgroundRepeat: 'no-repeat, repeat',
+            backgroundAttachment: 'scroll'
+          }} />
+          
+          {/* Content Overlay */}
+          <div className="relative z-10 h-full overflow-y-auto">
+            {/* Header Bar */}
+            <header className="border-b border-[#d4b896]/60 bg-white/80 backdrop-blur-xl sticky top-0 z-20">
+              <div className="container mx-auto px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <Link href="/dashboard" className="flex items-center gap-2">
+                    <BookOpen className="w-6 h-6 text-[#8b6f47]" />
+                    <span className="text-2xl handwritten font-bold text-[#8b6f47]">ReLive</span>
+                  </Link>
+                  <div className="flex items-center gap-2">
+                    {/* Edit Button */}
+                    {!isEditing && (
+                      <button
+                        onClick={handleEdit}
+                        className="p-2 hover:bg-blue-50 rounded-full transition-colors"
+                        title="Edit memory"
                       >
-                        {selectedItem.mood}
-                      </div>
+                        <Edit2 className="w-5 h-5 text-[#3498db]" />
+                      </button>
                     )}
-                  </div>
-                  
-                  {selectedItem.location && (
-                    <div className="flex items-center gap-2 mt-3">
-                      <MapPin className="w-5 h-5 text-[#fef9f3]" />
-                      <span className="text-lg handwritten text-[#fef9f3]" style={{ fontFamily: 'Dancing Script, cursive' }}>{selectedItem.location}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Content Area - Unruled */}
-                <div className="px-12 py-8 max-w-5xl mx-auto">
-                  {isEditing ? (
-                /* Edit Mode */
-                <div className="space-y-4">
-                  {/* Edit Form Header */}
-                  <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-6">
-                    <h3 className="text-xl handwritten font-bold text-blue-700 mb-1">Edit Memory</h3>
-                    <p className="text-sm handwritten text-blue-600">Update your memory details below</p>
-                  </div>
-
-                  {/* Title Field */}
-                  <div className="bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
-                    <label className="block text-sm handwritten font-bold text-[#8b6f47] mb-2">
-                      Title
-                    </label>
-                    <input
-                      type="text"
-                      value={editForm.title}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
-                      className="w-full px-4 py-3 border-2 border-[#d4b896] rounded-lg handwritten text-lg focus:border-[#8b6f47] focus:outline-none transition-colors"
-                      placeholder="Memory title..."
-                    />
-                  </div>
-
-                  {/* Date and Location Row */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
-                      <label className="block text-sm handwritten font-bold text-[#8b6f47] mb-2">
-                        Date
-                      </label>
-                      <input
-                        type="date"
-                        value={editForm.date}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, date: e.target.value }))}
-                        className="w-full px-4 py-3 border-2 border-[#d4b896] rounded-lg handwritten focus:border-[#8b6f47] focus:outline-none transition-colors"
-                      />
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
-                      <label className="block text-sm handwritten font-bold text-[#8b6f47] mb-2">
-                        Location
-                      </label>
-                      <input
-                        type="text"
-                        value={editForm.location}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
-                        className="w-full px-4 py-3 border-2 border-[#d4b896] rounded-lg handwritten focus:border-[#8b6f47] focus:outline-none transition-colors"
-                        placeholder="Where was this?"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Mood Field */}
-                  <div className="bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
-                    <label className="block text-sm handwritten font-bold text-[#8b6f47] mb-3">
-                      Mood
-                    </label>
-                    <div className="flex flex-wrap gap-3">
-                      {Object.keys(moodColors).map((mood) => (
-                        <button
-                          key={mood}
-                          type="button"
-                          onClick={() => setEditForm(prev => ({ ...prev, mood }))}
-                          className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl transition-all duration-200 ${
-                            editForm.mood === mood 
-                              ? 'ring-4 ring-[#8b6f47] scale-110 shadow-lg' 
-                              : 'hover:scale-105 shadow-md'
-                          }`}
-                          style={{ backgroundColor: moodColors[mood] }}
-                        >
-                          {mood}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Content Field */}
-                  <div className="bg-white rounded-xl shadow-md p-5 border-2 border-[#d4b896]/30">
-                    <label className="block text-sm handwritten font-bold text-[#8b6f47] mb-2">
-                      Your Story
-                    </label>
-                    <textarea
-                      value={editForm.content}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, content: e.target.value }))}
-                      rows={10}
-                      className="w-full px-4 py-3 border-2 border-[#d4b896] rounded-lg handwritten text-base focus:border-[#8b6f47] focus:outline-none transition-colors resize-none"
-                      placeholder="Tell your story..."
-                    />
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3 justify-end pt-4">
+                    {/* Delete Button */}
+                    {!isEditing && (
+                      <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="p-2 hover:bg-red-50 rounded-full transition-colors"
+                        title="Delete memory"
+                      >
+                        <Trash2 className="w-5 h-5 text-red-500" />
+                      </button>
+                    )}
+                    {/* Close Button */}
                     <button
-                      onClick={handleCancelEdit}
-                      disabled={isSaving}
-                      className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg handwritten font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveEdit}
-                      disabled={isSaving || !editForm.title || !editForm.content}
-                      className="px-6 py-3 bg-[#8b6f47] text-white rounded-lg handwritten font-medium hover:bg-[#6d5638] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
-                    >
-                      {isSaving ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4" />
-                          Save Changes
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* View Mode - Diary Style */
-                <div className="space-y-8">
-                  
-                  {/* Title */}
-                  <div className="border-b-2 border-[#d4b896]/30 pb-6">
-                    <h1 className="text-5xl handwritten font-bold text-[#2c3e50] leading-tight" style={{ fontFamily: 'Dancing Script, cursive' }}>
-                      {selectedItem.title}
-                    </h1>
-                  </div>
-
-                  {/* Tags */}
-                  {selectedItem.tags && selectedItem.tags.length > 0 && (
-                    <div className="bg-linear-to-r from-[#fef9f3] to-[#f5f0e8] rounded-xl p-6 border-2 border-[#d4b896]/30 shadow-sm">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Tag className="w-5 h-5 text-[#8b6f47]" />
-                        <h3 className="text-lg handwritten font-bold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Tags</h3>
-                      </div>
-                      <div className="flex flex-wrap gap-3">
-                      {selectedItem.tags.map((tag, idx) => (
-                        <span
-                          key={`${tag}-${idx}`}
-                          className="px-4 py-2 rounded-full text-base handwritten font-semibold border-2 shadow-sm hover:shadow-md transition-shadow"
-                          style={{
-                            borderColor: selectedItem.mood 
-                              ? moodColors[selectedItem.mood] || '#3498db'
-                              : '#3498db',
-                            color: selectedItem.mood 
-                              ? moodColors[selectedItem.mood] || '#3498db'
-                              : '#3498db',
-                            backgroundColor: selectedItem.mood 
-                              ? (moodColors[selectedItem.mood] || '#3498db') + '15'
-                              : '#3498db' + '15',
-                            fontFamily: 'Dancing Script, cursive'
-                          }}
-                        >
-                          # {tag}
-                        </span>
-                      ))}
-                    </div>
-                    </div>
-                  )}
-
-                  {/* Content with Rich Media */}
-                  <div className="bg-white/50 rounded-xl p-8 border-2 border-[#d4b896]/20">
-                    <div className="flex items-center gap-3 mb-6 pb-3 border-b border-[#d4b896]/30">
-                      <BookOpen className="w-6 h-6 text-[#8b6f47]" />
-                      <h3 className="text-2xl handwritten font-bold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Your Story</h3>
-                    </div>
-                    <div 
-                      className="prose prose-xl max-w-none handwritten text-[#34495e] leading-relaxed"
-                      dangerouslySetInnerHTML={{ __html: selectedItem.content }}
-                      style={{
-                        wordWrap: 'break-word',
-                        overflowWrap: 'break-word',
-                        fontFamily: 'Dancing Script, cursive',
-                        fontSize: '1.25rem',
-                        lineHeight: '2rem'
+                      onClick={() => {
+                        setSelectedItem(null)
+                        setIsEditing(false)
                       }}
-                    />
+                      className="p-2 hover:bg-red-50 rounded-full transition-colors"
+                    >
+                      <X className="w-6 h-6 text-[#8b6f47]" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            {/* Main Content */}
+            <main className="min-h-[calc(100vh-65px)] py-4 px-4 md:px-6">
+              <div className="max-w-5xl mx-auto">
+                {/* Diary Container */}
+                <div className="bg-white rounded-2xl border-2 border-[#d4b896] shadow-xl overflow-hidden">
+                  
+                  {/* Compact Header Section */}
+                  <div className="bg-linear-to-b from-[#fef9f3] to-white border-b-2 border-[#d4b896]/40 shadow-sm px-6 py-3">
+                    <div className="flex items-start justify-between gap-4">
+                      {/* Left: Title & Meta Info */}
+                      <div className="flex-1 space-y-2">
+                        {/* Title with Icon */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">📖</span>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              value={editForm.title}
+                              onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                              className="flex-1 text-xl handwritten font-bold text-[#2c3e50] bg-transparent border-b-2 border-[#3498db] outline-none"
+                              placeholder="Memory title..."
+                            />
+                          ) : (
+                            <h1 className="text-xl handwritten font-bold text-[#2c3e50]">
+                              {selectedItem.title}
+                            </h1>
+                          )}
+                        </div>
+                        
+                        {/* Date & Meta Row */}
+                        <div className="flex items-center gap-3 text-xs handwritten text-[#7f8c8d]">
+                          {isEditing ? (
+                            <input
+                              type="date"
+                              value={editForm.date}
+                              onChange={(e) => setEditForm(prev => ({ ...prev, date: e.target.value }))}
+                              className="text-xs handwritten bg-transparent border-b border-[#d4b896] focus:border-[#3498db] outline-none"
+                            />
+                          ) : (
+                            <span className="font-medium">
+                              {new Date(selectedItem.date).toLocaleDateString('en-US', { 
+                                weekday: 'short',
+                                month: 'short', 
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          )}
+                          {(selectedItem.location || isEditing) && (
+                            <>
+                              <span className="text-[#d4b896]">•</span>
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3 text-[#7f8c8d]" />
+                                {isEditing ? (
+                                  <input
+                                    type="text"
+                                    value={editForm.location}
+                                    onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
+                                    className="text-xs handwritten bg-transparent border-b border-[#d4b896] focus:border-[#3498db] outline-none w-32"
+                                    placeholder="Add location"
+                                  />
+                                ) : (
+                                  <span>{selectedItem.location}</span>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Tags Display */}
+                        {selectedItem.tags && selectedItem.tags.length > 0 && !isEditing && (
+                          <div className="flex flex-wrap gap-1">
+                            {selectedItem.tags.map((tag, idx) => (
+                              <span 
+                                key={`${tag}-${idx}`}
+                                className="inline-flex items-center gap-1 bg-[#3498db]/10 text-[#3498db] text-xs px-2 py-0.5 rounded-full handwritten border border-[#3498db]/20"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right: Mood */}
+                      {(selectedItem.mood || isEditing) && (
+                        <div className="flex flex-col items-end gap-1">
+                          <label className="text-xs handwritten font-medium text-[#7f8c8d]">
+                            Mood
+                          </label>
+                          {isEditing ? (
+                            <div className="flex gap-1 flex-wrap justify-end max-w-[200px]">
+                              {Object.keys(moodColors).slice(0, 6).map((mood) => (
+                                <button
+                                  key={mood}
+                                  type="button"
+                                  onClick={() => setEditForm(prev => ({ ...prev, mood }))}
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center text-lg transition-all ${
+                                    editForm.mood === mood 
+                                      ? 'ring-2 ring-[#8b6f47] scale-110' 
+                                      : 'hover:scale-105'
+                                  }`}
+                                  style={{ backgroundColor: moodColors[mood] }}
+                                >
+                                  {mood}
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <div 
+                              className="text-3xl w-12 h-12 flex items-center justify-center rounded-lg border border-[#d4b896]/30"
+                              style={{ backgroundColor: (moodColors[selectedItem.mood!] || '#B5D99C') + '20' }}
+                            >
+                              {selectedItem.mood}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Audio Section */}
-                  {selectedItem.media && selectedItem.media.filter(m => isAudioMedia(m)).length > 0 && (
-                    <div className="bg-linear-to-br from-[#f5f0e8] to-[#fef9f3] rounded-xl p-6 border-2 border-[#d4b896]/30 shadow-sm">
-                      <div className="flex items-center gap-3 mb-5 pb-3 border-b border-[#d4b896]/30">
-                        <Mic className="w-6 h-6 text-[#8b6f47]" />
-                        <h3 className="text-2xl handwritten font-bold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Audio Recordings</h3>
-                      </div>
-                      <div className="space-y-4">
-                        {selectedItem.media.filter(m => isAudioMedia(m)).map((audio, idx) => (
-                          <div key={audio.id} className="bg-white p-5 rounded-xl border-2 border-[#d4b896]/40 shadow-md hover:shadow-lg transition-shadow">
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="w-10 h-10 bg-[#8b6f47]/10 rounded-full flex items-center justify-center">
-                                <Mic className="w-5 h-5 text-[#8b6f47]" />
-                              </div>
-                              <span className="text-sm handwritten font-semibold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Recording {idx + 1}</span>
-                            </div>
+                  {/* Content Area */}
+                  <div className="px-6 py-6 bg-white min-h-[400px]">
+                    {/* Audio Section */}
+                    {selectedItem.media && selectedItem.media.filter(m => isAudioMedia(m)).length > 0 && (
+                      <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Mic className="w-4 h-4 text-[#8b6f47]" />
+                          <span className="text-sm handwritten font-semibold text-[#8b6f47]">Audio Recordings</span>
+                        </div>
+                        <div className="space-y-3">
+                          {selectedItem.media.filter(m => isAudioMedia(m)).map((audio) => (
                             <audio 
+                              key={audio.id}
                               src={audio.url} 
                               controls 
                               preload="metadata"
-                              className="w-full"
+                              className="w-full max-w-md" 
                             />
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
+                    )}
+
+                    {/* Story Content */}
+                    {isEditing ? (
+                      <textarea
+                        value={editForm.content}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, content: e.target.value }))}
+                        rows={15}
+                        className="w-full px-4 py-3 border-2 border-[#d4b896] rounded-lg handwritten text-lg focus:border-[#8b6f47] focus:outline-none transition-colors resize-none"
+                        placeholder="Tell your story..."
+                      />
+                    ) : (
+                      <div 
+                        className="tiptap-content prose max-w-none"
+                        dangerouslySetInnerHTML={{ __html: selectedItem.content }}
+                      />
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="bg-[#fef9f3]/80 backdrop-blur-sm border-t border-[#d4b896]/40 px-6 py-3">
+                    <div className="flex items-center justify-between">
+                      {isEditing ? (
+                        <>
+                          <button
+                            onClick={handleCancelEdit}
+                            disabled={isSaving}
+                            className="text-sm handwritten text-[#7f8c8d] hover:text-[#2c3e50] transition-colors flex items-center gap-1.5"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleSaveEdit}
+                            disabled={isSaving || !editForm.title || !editForm.content}
+                            className="px-4 py-2 bg-[#3498db] hover:bg-[#2980b9] text-white rounded-lg handwritten font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          >
+                            {isSaving ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <Save className="w-4 h-4" />
+                                Save Changes
+                              </>
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => setSelectedItem(null)}
+                            className="text-sm handwritten text-[#7f8c8d] hover:text-[#2c3e50] transition-colors flex items-center gap-1.5"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                            Back to Gallery
+                          </button>
+                          <div className="text-xs handwritten text-[#7f8c8d]">
+                            Created {new Date(selectedItem.created_at).toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </div>
+                        </>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="bg-linear-to-r from-[#f5f0e8] via-[#fef9f3] to-[#f5f0e8] border-t-2 border-[#d4b896]/50 px-12 py-5">
-              <div className="flex items-center justify-center gap-2">
-                <Calendar className="w-4 h-4 text-[#8b6f47]" />
-                <p className="text-base handwritten text-[#8b6f47] font-medium" style={{ fontFamily: 'Dancing Script, cursive' }}>
-                  Created on {new Date(selectedItem.created_at).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </p>
               </div>
-            </div>
-
-          </div>
-          </div>
+            </main>
           </div>
         </div>
       )}

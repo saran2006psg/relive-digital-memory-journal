@@ -690,141 +690,170 @@ function TimelineContent() {
         }
       `}</style>
 
-      {/* Detailed View Dialog */}
+      {/* Detailed View Dialog - Add Memory Style */}
       {selectedMemory && (
-        <div className="fixed inset-0 z-50 bg-linear-to-br from-[#faf7f2] via-[#f5f0e8] to-[#ede5d8] overflow-y-auto">
-          <div className="relative w-full min-h-screen">
-            
-            {/* Close Button */}
-            <button
-              onClick={() => setSelectedMemory(null)}
-              className="fixed top-6 right-6 z-50 w-14 h-14 bg-white hover:bg-red-50 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 border-4 border-[#d4b896]"
-            >
-              <X className="w-7 h-7 text-[#8b6f47]" />
-            </button>
-
-            {/* Full Width Container */}
-            <div className="w-full h-full">
-              
-              {/* Diary Paper Container */}
-              <div className="bg-[#fef9f3] min-h-screen">
-                
-                {/* Header with gradient brown */}
-                <div className="bg-linear-to-r from-[#a0826d] to-[#8b6f47] px-12 py-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <h2 className="text-4xl font-bold text-white leading-tight flex-1" style={{ fontFamily: 'Dancing Script, cursive' }}>
-                      {selectedMemory.title}
-                    </h2>
-                    {selectedMemory.mood && (
-                      <div 
-                        className="w-16 h-16 rounded-full flex items-center justify-center text-4xl shadow-lg border-4 border-white shrink-0"
-                        style={{ backgroundColor: selectedMemory.color }}
-                      >
-                        {selectedMemory.mood}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center gap-2 text-base text-white/90">
-                      <Calendar className="w-5 h-5" />
-                      <span style={{ fontFamily: 'Dancing Script, cursive' }}>
-                        {selectedMemory.month} {selectedMemory.day}, {selectedMemory.year}
-                      </span>
-                    </div>
-                    {selectedMemory.location && (
-                      <div className="flex items-center gap-2 text-base text-white/90">
-                        <MapPin className="w-5 h-5" />
-                        <span style={{ fontFamily: 'Dancing Script, cursive' }}>
-                          {selectedMemory.location}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Notebook Background */}
+          <div className="fixed inset-0 bg-white" style={{
+            backgroundImage: `
+              linear-gradient(
+                90deg,
+                #ffffff 80px,
+                #ffffff 82px,
+                transparent 82px
+              ),
+              repeating-linear-gradient(
+                0deg,
+                transparent 0px,
+                transparent 34px,
+                rgba(99, 179, 237, 0.25) 34px,
+                rgba(99, 179, 237, 0.25) 35px
+              )
+            `,
+            backgroundSize: '100% 100%, 100% 35px',
+            backgroundRepeat: 'no-repeat, repeat',
+            backgroundAttachment: 'scroll'
+          }} />
+          
+          {/* Content Overlay */}
+          <div className="relative z-10 h-full overflow-y-auto">
+            {/* Header Bar */}
+            <header className="border-b border-[#d4b896]/60 bg-white/80 backdrop-blur-xl sticky top-0 z-20">
+              <div className="container mx-auto px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <Link href="/dashboard" className="flex items-center gap-2">
+                    <BookOpen className="w-6 h-6 text-[#8b6f47]" />
+                    <span className="text-2xl handwritten font-bold text-[#8b6f47]">ReLive</span>
+                  </Link>
+                  <button
+                    onClick={() => setSelectedMemory(null)}
+                    className="p-2 hover:bg-red-50 rounded-full transition-colors"
+                  >
+                    <X className="w-6 h-6 text-[#8b6f47]" />
+                  </button>
                 </div>
+              </div>
+            </header>
 
-                {/* Content Area - Unruled */}
-                <div className="px-12 py-8 max-w-5xl mx-auto">
-                  {/* Tags Section */}
-                  {selectedMemory.tags && selectedMemory.tags.length > 0 && (
-                    <div className="mb-8">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Tag className="w-5 h-5 text-[#8b6f47]" />
-                        <h3 className="text-xl font-bold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Tags</h3>
-                      </div>
-                      <div className="flex flex-wrap gap-3">
-                        {selectedMemory.tags.map((tag, idx) => (
-                          <span
-                            key={`${tag}-${idx}`}
-                            className="px-4 py-2 rounded-full text-base font-semibold shadow-sm"
-                            style={{
-                              borderWidth: '2px',
-                              borderStyle: 'solid',
-                              borderColor: selectedMemory.color,
-                              color: selectedMemory.color,
-                              backgroundColor: selectedMemory.color + '15',
-                              fontFamily: 'Dancing Script, cursive'
-                            }}
-                          >
-                            {tag}
+            {/* Main Content */}
+            <main className="min-h-[calc(100vh-65px)] py-4 px-4 md:px-6">
+              <div className="max-w-5xl mx-auto">
+                {/* Diary Container */}
+                <div className="bg-white rounded-2xl border-2 border-[#d4b896] shadow-xl overflow-hidden">
+                  
+                  {/* Compact Header Section */}
+                  <div className="bg-linear-to-b from-[#fef9f3] to-white border-b-2 border-[#d4b896]/40 shadow-sm px-6 py-3">
+                    <div className="flex items-start justify-between gap-4">
+                      {/* Left: Title & Meta Info */}
+                      <div className="flex-1 space-y-2">
+                        {/* Title with Icon */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">📖</span>
+                          <h1 className="text-xl handwritten font-bold text-[#2c3e50]">
+                            {selectedMemory.title}
+                          </h1>
+                        </div>
+                        
+                        {/* Date & Meta Row */}
+                        <div className="flex items-center gap-3 text-xs handwritten text-[#7f8c8d]">
+                          <span className="font-medium">
+                            {selectedMemory.month} {selectedMemory.day}, {selectedMemory.year}
                           </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                          {selectedMemory.location && (
+                            <>
+                              <span className="text-[#d4b896]">•</span>
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3 text-[#7f8c8d]" />
+                                <span>{selectedMemory.location}</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
 
-                  {/* Audio Section */}
-                  {selectedMemory.media && selectedMemory.media.filter(m => isAudioMedia(m)).length > 0 && (
-                    <div className="mb-8">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Mic className="w-5 h-5 text-[#8b6f47]" />
-                        <h3 className="text-xl font-bold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Audio Recordings</h3>
+                        {/* Tags Display */}
+                        {selectedMemory.tags && selectedMemory.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {selectedMemory.tags.map((tag, idx) => (
+                              <span 
+                                key={`${tag}-${idx}`}
+                                className="inline-flex items-center gap-1 bg-[#3498db]/10 text-[#3498db] text-xs px-2 py-0.5 rounded-full handwritten border border-[#3498db]/20"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      <div className="space-y-4">
-                        {selectedMemory.media.filter(m => isAudioMedia(m)).map((audio) => (
-                          <audio 
-                            key={audio.id}
-                            src={audio.url} 
-                            controls 
-                            preload="metadata"
-                            className="w-full" 
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Story Content */}
-                  <div className="mb-8">
-                    <div className="flex items-center gap-2 mb-4">
-                      <BookOpen className="w-6 h-6 text-[#8b6f47]" />
-                      <h3 className="text-2xl font-bold text-[#8b6f47]" style={{ fontFamily: 'Dancing Script, cursive' }}>Your Story</h3>
+                      {/* Right: Mood */}
+                      {selectedMemory.mood && (
+                        <div className="flex flex-col items-end gap-1">
+                          <label className="text-xs handwritten font-medium text-[#7f8c8d]">
+                            Mood
+                          </label>
+                          <div 
+                            className="text-3xl w-12 h-12 flex items-center justify-center rounded-lg border border-[#d4b896]/30"
+                            style={{ backgroundColor: selectedMemory.color + '20' }}
+                          >
+                            {selectedMemory.mood}
+                          </div>
+                        </div>
+                      )}
                     </div>
+                  </div>
+
+                  {/* Content Area */}
+                  <div className="px-6 py-6 bg-white min-h-[400px]">
+                    {/* Audio Section */}
+                    {selectedMemory.media && selectedMemory.media.filter(m => isAudioMedia(m)).length > 0 && (
+                      <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Mic className="w-4 h-4 text-[#8b6f47]" />
+                          <span className="text-sm handwritten font-semibold text-[#8b6f47]">Audio Recordings</span>
+                        </div>
+                        <div className="space-y-3">
+                          {selectedMemory.media.filter(m => isAudioMedia(m)).map((audio) => (
+                            <audio 
+                              key={audio.id}
+                              src={audio.url} 
+                              controls 
+                              preload="metadata"
+                              className="w-full max-w-md" 
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Story Content - Same styling as TiptapEditor */}
                     <div 
-                      className="prose prose-lg max-w-none text-lg text-[#34495e] leading-relaxed"
+                      className="tiptap-content prose max-w-none"
                       dangerouslySetInnerHTML={{ __html: selectedMemory.content }}
-                      style={{
-                        fontFamily: 'Dancing Script, cursive',
-                        wordWrap: 'break-word',
-                        overflowWrap: 'break-word'
-                      }}
                     />
                   </div>
-                </div>
 
-                {/* Footer */}
-                <div className="px-12 py-4 bg-[#f5f0e8]">
-                  <p className="text-sm text-[#8b6f47] text-center" style={{ fontFamily: 'Dancing Script, cursive' }}>
-                    Created on {new Date(selectedMemory.created_at).toLocaleDateString('en-US', { 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
-                  </p>
+                  {/* Footer */}
+                  <div className="bg-[#fef9f3]/80 backdrop-blur-sm border-t border-[#d4b896]/40 px-6 py-3">
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => setSelectedMemory(null)}
+                        className="text-sm handwritten text-[#7f8c8d] hover:text-[#2c3e50] transition-colors flex items-center gap-1.5"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        Back to Timeline
+                      </button>
+                      <div className="text-xs handwritten text-[#7f8c8d]">
+                        Created {new Date(selectedMemory.created_at).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
               </div>
-            </div>
+            </main>
           </div>
         </div>
       )}

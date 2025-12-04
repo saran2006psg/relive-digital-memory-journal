@@ -382,7 +382,7 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
         <button
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().chain().focus().undo().run()}
-          className="p-2 rounded hover:bg-[#fef9f3] transition-colors text-[#8b7355] disabled:opacity-30 disabled:text-gray-400"
+          className="p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a] disabled:opacity-30 disabled:text-gray-400 disabled:hover:scale-100"
           title="Undo"
         >
           <Undo className="w-4 h-4" />
@@ -391,7 +391,7 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
         <button
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().chain().focus().redo().run()}
-          className="p-2 rounded hover:bg-[#fef9f3] transition-colors text-[#8b7355] disabled:opacity-30 disabled:text-gray-400"
+          className="p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a] disabled:opacity-30 disabled:text-gray-400 disabled:hover:scale-100"
           title="Redo"
         >
           <Redo className="w-4 h-4" />
@@ -403,7 +403,7 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
         <div className="relative">
           <button
             onClick={() => setShowHeadingMenu(!showHeadingMenu)}
-            className="p-2 rounded hover:bg-[#fef9f3] transition-colors text-[#8b7355] flex items-center gap-1"
+            className="p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a] flex items-center gap-1"
             title="Heading"
           >
             {editor.isActive('heading', { level: 1 }) ? (
@@ -425,8 +425,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
                   editor.chain().focus().setParagraph().run()
                   setShowHeadingMenu(false)
                 }}
-                className={`w-full text-left px-3 py-2 rounded hover:bg-[#fef9f3] transition-colors ${
-                  editor.isActive('paragraph') ? 'bg-[#8b7355] text-white' : 'text-[#8b7355]'
+                className={`w-full text-left px-3 py-2 rounded hover:bg-[#d4b896]/40 transition-all duration-200 ${
+                  editor.isActive('paragraph') ? 'bg-[#8b6f47] text-white' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
                 }`}
               >
                 Normal
@@ -436,8 +436,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
                   editor.chain().focus().toggleHeading({ level: 1 }).run()
                   setShowHeadingMenu(false)
                 }}
-                className={`w-full text-left px-3 py-2 rounded hover:bg-[#fef9f3] transition-colors text-xl font-bold ${
-                  editor.isActive('heading', { level: 1 }) ? 'bg-[#8b7355] text-white' : 'text-[#8b7355]'
+                className={`w-full text-left px-3 py-2 rounded hover:bg-[#d4b896]/40 transition-all duration-200 text-xl font-bold ${
+                  editor.isActive('heading', { level: 1 }) ? 'bg-[#8b6f47] text-white' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
                 }`}
               >
                 Heading 1
@@ -447,8 +447,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
                   editor.chain().focus().toggleHeading({ level: 2 }).run()
                   setShowHeadingMenu(false)
                 }}
-                className={`w-full text-left px-3 py-2 rounded hover:bg-[#fef9f3] transition-colors text-lg font-bold ${
-                  editor.isActive('heading', { level: 2 }) ? 'bg-[#8b7355] text-white' : 'text-[#8b7355]'
+                className={`w-full text-left px-3 py-2 rounded hover:bg-[#d4b896]/40 transition-all duration-200 text-lg font-bold ${
+                  editor.isActive('heading', { level: 2 }) ? 'bg-[#8b6f47] text-white' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
                 }`}
               >
                 Heading 2
@@ -458,8 +458,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
                   editor.chain().focus().toggleHeading({ level: 3 }).run()
                   setShowHeadingMenu(false)
                 }}
-                className={`w-full text-left px-3 py-2 rounded hover:bg-[#fef9f3] transition-colors font-bold ${
-                  editor.isActive('heading', { level: 3 }) ? 'bg-[#8b7355] text-white' : 'text-[#8b7355]'
+                className={`w-full text-left px-3 py-2 rounded hover:bg-[#d4b896]/40 transition-all duration-200 font-bold ${
+                  editor.isActive('heading', { level: 3 }) ? 'bg-[#8b6f47] text-white' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
                 }`}
               >
                 Heading 3
@@ -474,8 +474,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
           disabled={!editor.can().chain().focus().toggleBold().run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive('bold') ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive('bold') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           } disabled:opacity-30`}
           title="Bold"
         >
@@ -485,8 +485,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
         <button
           onClick={() => editor.chain().focus().toggleItalic().run()}
           disabled={!editor.can().chain().focus().toggleItalic().run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive('italic') ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive('italic') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           } disabled:opacity-30`}
           title="Italic"
         >
@@ -495,8 +495,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
 
         <button
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive('underline') ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive('underline') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Underline"
         >
@@ -505,8 +505,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
 
         <button
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive('strike') ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive('strike') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Strikethrough"
         >
@@ -515,8 +515,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
 
         <button
           onClick={() => editor.chain().focus().toggleCode().run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive('code') ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive('code') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Code"
         >
@@ -532,8 +532,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
             }
           }}
           disabled={!editor.can().chain().focus().toggleHighlight().run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive('highlight') ? 'bg-[#f59e0b] text-white shadow-md border-2 border-[#d97706]' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive('highlight') ? 'bg-[#d4b896] text-[#5c4a2a] shadow-md border-2 border-[#b89b6a]' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           } disabled:opacity-30`}
           title="Highlight"
         >
@@ -545,8 +545,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
         {/* Superscript and Subscript */}
         <button
           onClick={() => editor.chain().focus().toggleSuperscript().run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive('superscript') ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive('superscript') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Superscript"
         >
@@ -555,8 +555,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
 
         <button
           onClick={() => editor.chain().focus().toggleSubscript().run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive('subscript') ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive('subscript') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Subscript"
         >
@@ -569,8 +569,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
         <button
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           disabled={!editor.can().chain().focus().toggleBulletList().run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive('bulletList') ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive('bulletList') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           } disabled:opacity-30`}
           title="Bullet List"
         >
@@ -580,8 +580,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
         <button
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           disabled={!editor.can().chain().focus().toggleOrderedList().run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive('orderedList') ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive('orderedList') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           } disabled:opacity-30`}
           title="Numbered List"
         >
@@ -593,8 +593,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
         {/* Text Alignment */}
         <button
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive({ textAlign: 'left' }) ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive({ textAlign: 'left' }) ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Align Left"
         >
@@ -603,8 +603,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
 
         <button
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive({ textAlign: 'center' }) ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive({ textAlign: 'center' }) ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Align Center"
         >
@@ -613,8 +613,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
 
         <button
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive({ textAlign: 'right' }) ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive({ textAlign: 'right' }) ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Align Right"
         >
@@ -623,8 +623,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
 
         <button
           onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive({ textAlign: 'justify' }) ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive({ textAlign: 'justify' }) ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Justify"
         >
@@ -636,8 +636,8 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
         {/* Link */}
         <button
           onClick={setLink}
-          className={`p-2 rounded hover:bg-[#fef9f3] transition-colors ${
-            editor.isActive('link') ? 'bg-[#8b7355] text-white shadow-md' : 'text-[#8b7355]'
+          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+            editor.isActive('link') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Insert Link"
         >
@@ -649,7 +649,7 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
         {/* Image */}
         <button
           onClick={addImage}
-          className="p-2 rounded hover:bg-[#fef9f3] transition-colors text-[#8b7355]"
+          className="p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a]"
           title="Add Image"
         >
           <ImageIcon className="w-4 h-4" />
@@ -658,7 +658,7 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
         {/* Video */}
         <button
           onClick={addVideo}
-          className="p-2 rounded hover:bg-[#fef9f3] transition-colors text-[#8b7355]"
+          className="p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a]"
           title="Add Video"
         >
           <Video className="w-4 h-4" />
@@ -667,7 +667,7 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
         {/* Audio */}
         <button
           onClick={addAudio}
-          className="p-2 rounded hover:bg-[#fef9f3] transition-colors text-[#8b7355]"
+          className="p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a]"
           title="Add Audio"
         >
           <Music className="w-4 h-4" />

@@ -244,6 +244,15 @@
   }
 
   /* Timeline Animations */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes spin-slow {
   from {
     transform: rotate(0deg);
@@ -484,6 +493,160 @@
   .prose a:hover {
     color: #2980b9;
   }
+}
+
+/* Tiptap Content Display Styles - For previewing saved content */
+.tiptap-content {
+  font-family: var(--font-architects-daughter), 'Dancing Script', cursive;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #2c3e50;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.tiptap-content p {
+  margin-bottom: 1em;
+}
+
+.tiptap-content h1 {
+  font-size: 2em;
+  font-weight: 700;
+  margin-bottom: 0.5em;
+  color: #8b6f47;
+}
+
+.tiptap-content h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-bottom: 0.5em;
+  color: #8b6f47;
+}
+
+.tiptap-content h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin-bottom: 0.5em;
+  color: #8b6f47;
+}
+
+.tiptap-content strong {
+  font-weight: 700;
+}
+
+.tiptap-content em {
+  font-style: italic;
+}
+
+.tiptap-content u {
+  text-decoration: underline;
+}
+
+.tiptap-content s {
+  text-decoration: line-through;
+}
+
+.tiptap-content code {
+  background-color: #f5f5f5;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+  font-size: 0.9em;
+  color: #e83e8c;
+}
+
+.tiptap-content mark {
+  background-color: #ffeb3b;
+  color: inherit;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.125rem;
+}
+
+.tiptap-content ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.tiptap-content ol {
+  list-style-type: decimal;
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.tiptap-content li {
+  margin-bottom: 0.5em;
+}
+
+.tiptap-content a {
+  color: #3498db;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tiptap-content a:hover {
+  color: #2980b9;
+}
+
+.tiptap-content sup {
+  vertical-align: super;
+  font-size: smaller;
+}
+
+.tiptap-content sub {
+  vertical-align: sub;
+  font-size: smaller;
+}
+
+.tiptap-content img {
+  max-width: 400px;
+  height: auto;
+  border-radius: 8px;
+  margin: 1rem 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 4px solid white;
+}
+
+.tiptap-content video {
+  max-width: 500px;
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  border: 4px solid white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 1rem 0;
+  display: block;
+}
+
+.tiptap-content audio {
+  width: 100%;
+  max-width: 400px;
+  margin: 1rem 0;
+  display: block;
+}
+
+.tiptap-content iframe {
+  max-width: 100%;
+  border-radius: 0.5rem;
+  border: 4px solid white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 1rem 0;
+}
+
+.tiptap-content blockquote {
+  border-left: 4px solid #d4b896;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: #7f8c8d;
+}
+
+.tiptap-content pre {
+  background-color: #f5f5f5;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-family: monospace;
 }
 
 /* Hide Next.js error overlay portal */
