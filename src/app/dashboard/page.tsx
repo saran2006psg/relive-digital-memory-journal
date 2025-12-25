@@ -120,13 +120,23 @@ export default function DashboardPage() {
         const currentDay = today.getDate()
         const currentYear = today.getFullYear()
 
-        // Helper function to fetch memories
-        const fetchMemories = async (query: any) => {
-          const response = await fetch('/api/memories', {
-            headers: {
-              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        const token = (await supabase.auth.getSession()).data.session?.access_token
+
+        if (!token) {
+          setLoadingMemories(false)
+          return
+        }
+
+        // Helper function to fetch memories with date range
+        const fetchMemoriesInRange = async (startDate: string, endDate: string) => {
+          const response = await fetch(
+            `/api/memories?startDate=${startDate}&endDate=${endDate}&limit=3`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
             }
-          })
+          )
 
           if (!response.ok) return []
 
@@ -134,39 +144,36 @@ export default function DashboardPage() {
           return data.memories || []
         }
 
-        const allMemories = await fetchMemories({})
-
         // Priority 1: Check for memories from past years on this exact day
-        const pastYearMemories = allMemories.filter((memory: any) => {
-          const memoryDate = new Date(memory.date)
-          return (
-            memoryDate.getMonth() + 1 === currentMonth &&
-            memoryDate.getDate() === currentDay &&
-            memoryDate.getFullYear() < currentYear
-          )
-        }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
-
+        // We'll check the last 10 years
+        const pastYearStartDate = new Date(currentYear - 10, currentMonth - 1, currentDay).toISOString().split('T')[0]
+        const pastYearEndDate = new Date(currentYear - 1, currentMonth - 1, currentDay, 23, 59, 59).toISOString().split('T')[0]
+        
+        const pastYearMemories = await fetchMemoriesInRange(pastYearStartDate, pastYearEndDate)
+        
         if (pastYearMemories.length > 0) {
-          const yearsAgo = currentYear - new Date(pastYearMemories[0].date).getFullYear()
-          setOnThisDayMemories(pastYearMemories.slice(0, 3))
-          setOnThisDayContext(yearsAgo === 1 ? "A year ago today" : `${yearsAgo} years ago today`)
-          setLoadingMemories(false)
-          return
+          // Filter to exact day match
+          const exactDayMatches = pastYearMemories.filter((memory: any) => {
+            const memoryDate = new Date(memory.date)
+            return memoryDate.getMonth() + 1 === currentMonth && memoryDate.getDate() === currentDay
+          }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+          if (exactDayMatches.length > 0) {
+            const yearsAgo = currentYear - new Date(exactDayMatches[0].date).getFullYear()
+            setOnThisDayMemories(exactDayMatches.slice(0, 3))
+            setOnThisDayContext(yearsAgo === 1 ? "A year ago today" : `${yearsAgo} years ago today`)
+            setLoadingMemories(false)
+            return
+          }
         }
 
         // Priority 2: Check for memories from past month on this day
         const pastMonthDate = new Date(today)
         pastMonthDate.setMonth(pastMonthDate.getMonth() - 1)
-        const pastMonth = pastMonthDate.getMonth() + 1
+        const pastMonthStartDate = new Date(pastMonthDate.getFullYear(), pastMonthDate.getMonth(), currentDay).toISOString().split('T')[0]
+        const pastMonthEndDate = new Date(pastMonthDate.getFullYear(), pastMonthDate.getMonth(), currentDay, 23, 59, 59).toISOString().split('T')[0]
 
-        const pastMonthMemories = allMemories.filter((memory: any) => {
-          const memoryDate = new Date(memory.date)
-          return (
-            memoryDate.getMonth() + 1 === pastMonth &&
-            memoryDate.getDate() === currentDay &&
-            memoryDate.getFullYear() === (pastMonth > currentMonth ? currentYear - 1 : currentYear)
-          )
-        }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        const pastMonthMemories = await fetchMemoriesInRange(pastMonthStartDate, pastMonthEndDate)
 
         if (pastMonthMemories.length > 0) {
           setOnThisDayMemories(pastMonthMemories.slice(0, 3))
@@ -178,18 +185,10 @@ export default function DashboardPage() {
         // Priority 3: Check for yesterday's memories
         const yesterday = new Date(today)
         yesterday.setDate(yesterday.getDate() - 1)
-        const yesterdayMonth = yesterday.getMonth() + 1
-        const yesterdayDay = yesterday.getDate()
-        const yesterdayYear = yesterday.getFullYear()
+        const yesterdayStartDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()).toISOString().split('T')[0]
+        const yesterdayEndDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59).toISOString().split('T')[0]
 
-        const yesterdayMemories = allMemories.filter((memory: any) => {
-          const memoryDate = new Date(memory.date)
-          return (
-            memoryDate.getMonth() + 1 === yesterdayMonth &&
-            memoryDate.getDate() === yesterdayDay &&
-            memoryDate.getFullYear() === yesterdayYear
-          )
-        }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        const yesterdayMemories = await fetchMemoriesInRange(yesterdayStartDate, yesterdayEndDate)
 
         if (yesterdayMemories.length > 0) {
           setOnThisDayMemories(yesterdayMemories.slice(0, 3))
@@ -199,15 +198,20 @@ export default function DashboardPage() {
         }
 
         // Priority 4: Show latest/recent memories
-        if (allMemories.length > 0) {
-          const recentMemories = allMemories
-            .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
-            .slice(0, 3)
-          
-          setOnThisDayMemories(recentMemories)
-          setOnThisDayContext("Recent memories")
-          setLoadingMemories(false)
-          return
+        const response = await fetch('/api/memories?limit=3', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.memories && data.memories.length > 0) {
+            setOnThisDayMemories(data.memories)
+            setOnThisDayContext("Recent memories")
+            setLoadingMemories(false)
+            return
+          }
         }
 
         // No memories found
@@ -252,12 +256,18 @@ export default function DashboardPage() {
           startDate = new Date(today.getFullYear(), 0, 1)
         }
 
-        // Fetch memories with moods from the selected period
-        const response = await fetch('/api/memories', {
-          headers: {
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        const startDateStr = startDate.toISOString().split('T')[0]
+        const endDateStr = today.toISOString().split('T')[0]
+
+        // Fetch memories with moods from the selected period (without media to reduce payload)
+        const response = await fetch(
+          `/api/memories?startDate=${startDateStr}&endDate=${endDateStr}&hasMood=true&includeMedia=false`,
+          {
+            headers: {
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+            }
           }
-        })
+        )
 
         if (!response.ok) {
           setMoodData([])
@@ -266,17 +276,11 @@ export default function DashboardPage() {
         }
 
         const data = await response.json()
-        const allMemories = data.memories || []
-
-        // Filter memories by date range and count moods
-        const filteredMemories = allMemories.filter((memory: any) => {
-          const memoryDate = new Date(memory.date)
-          return memoryDate >= startDate && memoryDate <= today && memory.mood
-        })
+        const memoriesWithMoods = data.memories || []
 
         // Count mood occurrences
         const moodCounts: { [key: string]: number } = {}
-        filteredMemories.forEach((memory: any) => {
+        memoriesWithMoods.forEach((memory: any) => {
           if (memory.mood) {
             moodCounts[memory.mood] = (moodCounts[memory.mood] || 0) + 1
           }

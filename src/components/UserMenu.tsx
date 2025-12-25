@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -15,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
-export function UserMenu() {
+export const UserMenu = memo(function UserMenu() {
   const { user, loading, signOut } = useSupabaseAuth()
   const router = useRouter()
 
@@ -89,4 +90,4 @@ export function UserMenu() {
       </DropdownMenuContent>
     </DropdownMenu>
   )
-}
+})

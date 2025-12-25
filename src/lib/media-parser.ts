@@ -34,30 +34,28 @@ export function extractCloudinaryId(url: string): string | null {
  */
 export function parseMediaFromHTML(htmlContent: string): Omit<MediaItem, 'memory_id'>[] {
   const mediaItems: Omit<MediaItem, 'memory_id'>[] = []
-
-  // Regular expressions to extract media URLs from HTML
-  const patterns = [
-    { regex: /<img[^>]+src="([^">]+)"/g, type: 'image' as const },
-    { regex: /<video[^>]+src="([^">]+)"/g, type: 'video' as const },
-    { regex: /<audio[^>]+src="([^">]+)"/g, type: 'audio' as const },
-  ]
-
-  patterns.forEach(({ regex, type }) => {
-    let match
-    while ((match = regex.exec(htmlContent)) !== null) {
-      const url = match[1]
-      // Skip base64 placeholders and data URIs
-      if (url && !url.startsWith('data:')) {
-        mediaItems.push({
-          url: url,
-          type: type,
-          media_type: type,
-          cloudinary_url: url,
-          cloudinary_id: extractCloudinaryId(url),
-        })
-      }
+  
+  // Use a single regex to find all tags with src attributes
+  // This is more efficient than running multiple regex.exec() loops
+  const allTagsRegex = /<(img|video|audio)[^>]+src="([^">]+)"[^>]*>/gi
+  const matches = htmlContent.matchAll(allTagsRegex)
+  
+  for (const match of matches) {
+    const tagName = match[1].toLowerCase()
+    const url = match[2]
+    
+    // Skip base64 placeholders and data URIs
+    if (url && !url.startsWith('data:')) {
+      const mediaType = tagName as 'image' | 'video' | 'audio'
+      mediaItems.push({
+        url: url,
+        type: mediaType,
+        media_type: mediaType,
+        cloudinary_url: url,
+        cloudinary_id: extractCloudinaryId(url),
+      })
     }
-  })
+  }
 
   return mediaItems
 }
@@ -136,20 +134,15 @@ export function getMediaStats(htmlContent: string): {
  * @returns Plain text without HTML tags
  */
 export function stripHtmlTags(htmlContent: string): string {
-  // Remove HTML tags
-  let text = htmlContent.replace(/<[^>]*>/g, ' ')
-  
-  // Decode HTML entities
-  text = text
+  // Remove HTML tags and decode entities in a single pass
+  return htmlContent
+    .replace(/<[^>]*>/g, ' ')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-  
-  // Remove extra whitespace
-  text = text.replace(/\s+/g, ' ').trim()
-  
-  return text
+    .replace(/\s+/g, ' ')
+    .trim()
 }
