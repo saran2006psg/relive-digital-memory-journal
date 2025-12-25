@@ -134,15 +134,16 @@ export function getMediaStats(htmlContent: string): {
  * @returns Plain text without HTML tags
  */
 export function stripHtmlTags(htmlContent: string): string {
-  // Remove HTML tags and decode entities in a single pass
+  // Remove HTML tags and decode entities
+  // Note: &amp; must be decoded last to avoid double-decoding
   return htmlContent
     .replace(/<[^>]*>/g, ' ')
     .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&')
     .replace(/\s+/g, ' ')
     .trim()
 }
