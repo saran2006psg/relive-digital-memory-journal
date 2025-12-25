@@ -131,10 +131,19 @@ export function createLRUCache<K, V>(maxSize: number) {
     },
 
     set(key: K, value: V): void {
+      // If key exists, just update it (move to end)
+      if (cache.has(key)) {
+        cache.delete(key)
+        cache.set(key, value)
+        return
+      }
+
       // Remove oldest if at capacity
       if (cache.size >= maxSize) {
-        const firstKey = cache.keys().next().value
-        cache.delete(firstKey)
+        const firstKey = cache.keys().next().value as K
+        if (firstKey !== undefined) {
+          cache.delete(firstKey)
+        }
       }
 
       cache.set(key, value)

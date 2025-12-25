@@ -89,7 +89,7 @@ export const OptimizedImage = memo(function OptimizedImage({
       {/* Main image */}
       <img
         ref={imgRef}
-        src={isInView ? optimizedSrc : placeholderSrc || optimizedSrc}
+        src={isInView ? optimizedSrc : (placeholderSrc || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7')}
         alt={alt}
         className={`w-full h-full object-cover transition-opacity duration-300 ${
           isLoaded ? 'opacity-100' : 'opacity-0'

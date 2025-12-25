@@ -147,7 +147,7 @@ export default function DashboardPage() {
         // Priority 1: Check for memories from past years on this exact day
         // We'll check the last 10 years
         const pastYearStartDate = new Date(currentYear - 10, currentMonth - 1, currentDay).toISOString().split('T')[0]
-        const pastYearEndDate = new Date(currentYear - 1, currentMonth - 1, currentDay, 23, 59, 59).toISOString().split('T')[0]
+        const pastYearEndDate = new Date(currentYear - 1, currentMonth - 1, currentDay).toISOString()
         
         const pastYearMemories = await fetchMemoriesInRange(pastYearStartDate, pastYearEndDate)
         

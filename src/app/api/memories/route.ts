@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
           const tagId = existingTagMap.get(tagName)
           return tagId ? { memory_id: memory.id, tag_id: tagId } : null
         })
-        .filter(Boolean)
+        .filter((item): item is { memory_id: string; tag_id: string } => item !== null)
 
       if (memoryTagsToInsert.length > 0) {
         await supabase.from('memory_tags').insert(memoryTagsToInsert)
