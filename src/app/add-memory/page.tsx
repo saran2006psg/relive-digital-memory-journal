@@ -797,7 +797,11 @@ export default function AddMemoryPage() {
 
       {/* Expanded Image Modal */}
       <Dialog open={expandedImageIndex !== null} onOpenChange={() => setExpandedImageIndex(null)}>
-        <DialogContent className="max-w-5xl max-h-[90vh] p-6 bg-white">
+        <DialogContent 
+          className="max-w-5xl max-h-[90vh] p-6 bg-white"
+          title="Image Preview"
+          description="Expanded view of the selected image"
+        >
           {expandedImageIndex !== null && (
             <div className="relative w-full h-full flex items-center justify-center">
               {/* Expand Icon - Top Left */}

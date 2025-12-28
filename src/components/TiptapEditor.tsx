@@ -40,7 +40,7 @@ import {
   Video,
   Music
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 interface TiptapEditorProps {
   content: string
@@ -54,55 +54,58 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
   const [showHeadingMenu, setShowHeadingMenu] = useState(false)
   const [, setForceUpdate] = useState(0)
 
+  // Memoize extensions to prevent duplicate registration warnings
+  const extensions = useMemo(() => [
+    StarterKit.configure({
+      heading: {
+        levels: [1, 2, 3],
+      },
+      bulletList: {
+        keepMarks: true,
+        keepAttributes: false,
+      },
+      orderedList: {
+        keepMarks: true,
+        keepAttributes: false,
+      },
+    }),
+    Placeholder.configure({
+      placeholder: placeholder || 'Start writing your thoughts...',
+    }),
+    ResizableImageExtension.configure({
+      inline: true,
+      allowBase64: true,
+      HTMLAttributes: {
+        class: 'resizable-image',
+      },
+    }),
+    Link.configure({
+      openOnClick: false,
+      HTMLAttributes: {
+        class: 'text-[#3498db] underline hover:text-[#2980b9] transition-colors',
+      },
+    }),
+    Underline,
+    SuperscriptExt,
+    SubscriptExt,
+    Highlight.configure({
+      multicolor: false,
+    }),
+    Youtube.configure({
+      controls: true,
+      nocookie: true,
+    }),
+    VideoExtension,
+    AudioExtension,
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+    }),
+  ], [placeholder])
+
   const editor = useEditor({
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,
-    extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3],
-        },
-        bulletList: {
-          keepMarks: true,
-          keepAttributes: false,
-        },
-        orderedList: {
-          keepMarks: true,
-          keepAttributes: false,
-        },
-      }),
-      Placeholder.configure({
-        placeholder: placeholder || 'Start writing your thoughts...',
-      }),
-      ResizableImageExtension.configure({
-        inline: true,
-        allowBase64: true,
-        HTMLAttributes: {
-          class: 'resizable-image',
-        },
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-[#3498db] underline hover:text-[#2980b9] transition-colors',
-        },
-      }),
-      Underline,
-      SuperscriptExt,
-      SubscriptExt,
-      Highlight.configure({
-        multicolor: false,
-      }),
-      Youtube.configure({
-        controls: true,
-        nocookie: true,
-      }),
-      VideoExtension,
-      AudioExtension,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-    ],
+    extensions,
     content,
     editorProps: {
       attributes: {
@@ -377,55 +380,56 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
     <div className="tiptap-editor">
       {/* Toolbar */}
       {!editorOnly && (
-        <div className={`${toolbarOnly ? '' : 'sticky top-0 z-50 mb-4'} ${toolbarOnly ? 'bg-transparent border-0' : 'bg-[#fef9f3] border-2 border-[#d4b896] rounded-lg shadow-lg'} px-2 py-1 flex flex-wrap gap-1`}>
+        <div className={`${toolbarOnly ? '' : 'sticky top-0 z-50 mb-4'} ${toolbarOnly ? 'bg-transparent border-0' : 'bg-[#fef9f3] border-2 border-[#d4b896] rounded-lg shadow-lg'} px-1 sm:px-2 py-1 overflow-x-auto`}>
+        <div className="flex flex-nowrap gap-0.5 sm:gap-1 min-w-max">
         {/* Undo/Redo */}
         <button
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().chain().focus().undo().run()}
-          className="p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a] disabled:opacity-30 disabled:text-gray-400 disabled:hover:scale-100"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a] disabled:opacity-30 disabled:text-gray-400 disabled:hover:scale-100"
           title="Undo"
         >
-          <Undo className="w-4 h-4" />
+          <Undo className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
         <button
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().chain().focus().redo().run()}
-          className="p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a] disabled:opacity-30 disabled:text-gray-400 disabled:hover:scale-100"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a] disabled:opacity-30 disabled:text-gray-400 disabled:hover:scale-100"
           title="Redo"
         >
-          <Redo className="w-4 h-4" />
+          <Redo className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
-        <div className="w-px h-6 bg-[#d4b896] mx-1 self-center" />
+        <div className="w-px h-5 sm:h-6 bg-[#d4b896] mx-0.5 sm:mx-1 self-center shrink-0" />
 
         {/* Heading Dropdown */}
         <div className="relative">
           <button
             onClick={() => setShowHeadingMenu(!showHeadingMenu)}
-            className="p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a] flex items-center gap-1"
+            className="p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a] flex items-center gap-0.5 sm:gap-1"
             title="Heading"
           >
             {editor.isActive('heading', { level: 1 }) ? (
-              <Heading1 className="w-4 h-4" />
+              <Heading1 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             ) : editor.isActive('heading', { level: 2 }) ? (
-              <Heading2 className="w-4 h-4" />
+              <Heading2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             ) : editor.isActive('heading', { level: 3 }) ? (
-              <Heading3 className="w-4 h-4" />
+              <Heading3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             ) : (
-              <>H</>
+              <span className="text-xs sm:text-sm font-semibold">H</span>
             )}
-            <ChevronDown className="w-3 h-3" />
+            <ChevronDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
           </button>
           
           {showHeadingMenu && (
-            <div className="absolute top-full left-0 mt-1 bg-white border-2 border-[#d4b896] rounded-lg shadow-lg p-1 z-30 min-w-[120px]">
+            <div className="absolute top-full left-0 mt-1 bg-white border-2 border-[#d4b896] rounded-lg shadow-lg p-1 z-30 min-w-[100px] sm:min-w-[120px]">
               <button
                 onClick={() => {
                   editor.chain().focus().setParagraph().run()
                   setShowHeadingMenu(false)
                 }}
-                className={`w-full text-left px-3 py-2 rounded hover:bg-[#d4b896]/40 transition-all duration-200 ${
+                className={`w-full text-left px-2 sm:px-3 py-1.5 sm:py-2 rounded hover:bg-[#d4b896]/40 transition-all duration-200 text-sm sm:text-base ${
                   editor.isActive('paragraph') ? 'bg-[#8b6f47] text-white' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
                 }`}
               >
@@ -436,7 +440,7 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
                   editor.chain().focus().toggleHeading({ level: 1 }).run()
                   setShowHeadingMenu(false)
                 }}
-                className={`w-full text-left px-3 py-2 rounded hover:bg-[#d4b896]/40 transition-all duration-200 text-xl font-bold ${
+                className={`w-full text-left px-2 sm:px-3 py-1.5 sm:py-2 rounded hover:bg-[#d4b896]/40 transition-all duration-200 text-base sm:text-xl font-bold ${
                   editor.isActive('heading', { level: 1 }) ? 'bg-[#8b6f47] text-white' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
                 }`}
               >
@@ -447,7 +451,7 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
                   editor.chain().focus().toggleHeading({ level: 2 }).run()
                   setShowHeadingMenu(false)
                 }}
-                className={`w-full text-left px-3 py-2 rounded hover:bg-[#d4b896]/40 transition-all duration-200 text-lg font-bold ${
+                className={`w-full text-left px-2 sm:px-3 py-1.5 sm:py-2 rounded hover:bg-[#d4b896]/40 transition-all duration-200 text-sm sm:text-lg font-bold ${
                   editor.isActive('heading', { level: 2 }) ? 'bg-[#8b6f47] text-white' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
                 }`}
               >
@@ -458,7 +462,7 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
                   editor.chain().focus().toggleHeading({ level: 3 }).run()
                   setShowHeadingMenu(false)
                 }}
-                className={`w-full text-left px-3 py-2 rounded hover:bg-[#d4b896]/40 transition-all duration-200 font-bold ${
+                className={`w-full text-left px-2 sm:px-3 py-1.5 sm:py-2 rounded hover:bg-[#d4b896]/40 transition-all duration-200 text-sm sm:text-base font-bold ${
                   editor.isActive('heading', { level: 3 }) ? 'bg-[#8b6f47] text-white' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
                 }`}
               >
@@ -468,59 +472,59 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
           )}
         </div>
 
-        <div className="w-px h-6 bg-[#d4b896] mx-1 self-center" />
+        <div className="w-px h-5 sm:h-6 bg-[#d4b896] mx-0.5 sm:mx-1 self-center shrink-0" />
 
         {/* Text Formatting */}
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
           disabled={!editor.can().chain().focus().toggleBold().run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive('bold') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           } disabled:opacity-30`}
           title="Bold"
         >
-          <Bold className="w-4 h-4" />
+          <Bold className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
         
         <button
           onClick={() => editor.chain().focus().toggleItalic().run()}
           disabled={!editor.can().chain().focus().toggleItalic().run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive('italic') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           } disabled:opacity-30`}
           title="Italic"
         >
-          <Italic className="w-4 h-4" />
+          <Italic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
         <button
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive('underline') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Underline"
         >
-          <UnderlineIcon className="w-4 h-4" />
+          <UnderlineIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
         <button
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive('strike') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Strikethrough"
         >
-          <Strikethrough className="w-4 h-4" />
+          <Strikethrough className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
         <button
           onClick={() => editor.chain().focus().toggleCode().run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive('code') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Code"
         >
-          <Code className="w-4 h-4" />
+          <Code className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
         <button
@@ -532,146 +536,147 @@ export function TiptapEditor({ content, onChange, placeholder, toolbarOnly = fal
             }
           }}
           disabled={!editor.can().chain().focus().toggleHighlight().run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive('highlight') ? 'bg-[#d4b896] text-[#5c4a2a] shadow-md border-2 border-[#b89b6a]' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           } disabled:opacity-30`}
           title="Highlight"
         >
-          <Highlighter className="w-4 h-4" />
+          <Highlighter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
-        <div className="w-px h-6 bg-[#d4b896] mx-1 self-center" />
+        <div className="w-px h-5 sm:h-6 bg-[#d4b896] mx-0.5 sm:mx-1 self-center shrink-0" />
 
         {/* Superscript and Subscript */}
         <button
           onClick={() => editor.chain().focus().toggleSuperscript().run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive('superscript') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Superscript"
         >
-          <span className="text-xs font-bold">x²</span>
+          <span className="text-[10px] sm:text-xs font-bold">x²</span>
         </button>
 
         <button
           onClick={() => editor.chain().focus().toggleSubscript().run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive('subscript') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Subscript"
         >
-          <span className="text-xs font-bold">x₂</span>
+          <span className="text-[10px] sm:text-xs font-bold">x₂</span>
         </button>
 
-        <div className="w-px h-6 bg-[#d4b896] mx-1 self-center" />
+        <div className="w-px h-5 sm:h-6 bg-[#d4b896] mx-0.5 sm:mx-1 self-center shrink-0" />
 
         {/* Lists */}
         <button
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           disabled={!editor.can().chain().focus().toggleBulletList().run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive('bulletList') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           } disabled:opacity-30`}
           title="Bullet List"
         >
-          <List className="w-4 h-4" />
+          <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
         <button
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           disabled={!editor.can().chain().focus().toggleOrderedList().run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive('orderedList') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           } disabled:opacity-30`}
           title="Numbered List"
         >
-          <ListOrdered className="w-4 h-4" />
+          <ListOrdered className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
-        <div className="w-px h-6 bg-[#d4b896] mx-1 self-center" />
+        <div className="w-px h-5 sm:h-6 bg-[#d4b896] mx-0.5 sm:mx-1 self-center shrink-0" />
 
         {/* Text Alignment */}
         <button
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive({ textAlign: 'left' }) ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Align Left"
         >
-          <AlignLeft className="w-4 h-4" />
+          <AlignLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
         <button
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive({ textAlign: 'center' }) ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Align Center"
         >
-          <AlignCenter className="w-4 h-4" />
+          <AlignCenter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
         <button
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive({ textAlign: 'right' }) ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Align Right"
         >
-          <AlignRight className="w-4 h-4" />
+          <AlignRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
         <button
           onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive({ textAlign: 'justify' }) ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Justify"
         >
-          <AlignJustify className="w-4 h-4" />
+          <AlignJustify className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
-        <div className="w-px h-6 bg-[#d4b896] mx-1 self-center" />
+        <div className="w-px h-5 sm:h-6 bg-[#d4b896] mx-0.5 sm:mx-1 self-center shrink-0" />
 
         {/* Link */}
         <button
           onClick={setLink}
-          className={`p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
+          className={`p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 ${
             editor.isActive('link') ? 'bg-[#8b6f47] text-white shadow-md' : 'text-[#8b6f47] hover:text-[#5c4a2a]'
           }`}
           title="Insert Link"
         >
-          <LinkIcon className="w-4 h-4" />
+          <LinkIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
-        <div className="w-px h-6 bg-[#d4b896] mx-1 self-center" />
+        <div className="w-px h-5 sm:h-6 bg-[#d4b896] mx-0.5 sm:mx-1 self-center shrink-0" />
 
         {/* Image */}
         <button
           onClick={addImage}
-          className="p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a]"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a]"
           title="Add Image"
         >
-          <ImageIcon className="w-4 h-4" />
+          <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
         {/* Video */}
         <button
           onClick={addVideo}
-          className="p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a]"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a]"
           title="Add Video"
         >
-          <Video className="w-4 h-4" />
+          <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
         {/* Audio */}
         <button
           onClick={addAudio}
-          className="p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a]"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-[#d4b896]/40 hover:scale-105 transition-all duration-200 text-[#8b6f47] hover:text-[#5c4a2a]"
           title="Add Audio"
         >
-          <Music className="w-4 h-4" />
+          <Music className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
+        </div>
       </div>
       )}
 
